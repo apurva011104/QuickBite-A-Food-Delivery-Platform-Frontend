@@ -1,0 +1,115 @@
+<section class="mx-auto flex min-h-[75vh] max-w-7xl items-center px-4 py-12 sm:px-6 lg:px-8">
+  <div class="mx-auto w-full max-w-lg rounded-3xl bg-white p-8 shadow-lg ring-1 ring-black/5">
+    <div class="mb-6 text-center">
+      <h1 class="text-3xl font-extrabold text-[var(--qb-text)]">Create Account</h1>
+      <p class="mt-2 text-sm text-[var(--qb-muted)]">Join QuickBite today</p>
+    </div>
+
+    <form class="space-y-5" (ngSubmit)="onSignup()">
+      <div class="grid gap-5 md:grid-cols-2">
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">First Name</label>
+          <input
+            type="text"
+            name="firstName"
+            [(ngModel)]="firstName"
+            placeholder="John"
+            class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+          />
+        </div>
+
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Last Name</label>
+          <input
+            type="text"
+            name="lastName"
+            [(ngModel)]="lastName"
+            placeholder="Doe"
+            class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Email</label>
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="you@example.com"
+          class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+        />
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Phone</label>
+        <input
+          type="text"
+          name="phone"
+          [(ngModel)]="phone"
+          placeholder="+91 98765 43210"
+          class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+        />
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Password</label>
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="Create password"
+          class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+        />
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Confirm Password</label>
+        <input
+          type="password"
+          name="confirmPassword"
+          [(ngModel)]="confirmPassword"
+          placeholder="Confirm password"
+          class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+        />
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Register as</label>
+        <select
+          name="role"
+          [(ngModel)]="role"
+          class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+        >
+          <option value="CUSTOMER">Customer</option>
+          <option value="OWNER">Restaurant Owner</option>
+          <option value="AGENT">Delivery Agent</option>
+        </select>
+      </div>
+
+      @if (errorMessage) {
+        <p class="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+          {{ errorMessage }}
+        </p>
+      }
+
+      @if (successMessage) {
+        <p class="rounded-2xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+          {{ successMessage }}
+        </p>
+      }
+
+      <button
+        type="submit"
+        class="w-full rounded-2xl bg-[var(--qb-primary)] px-4 py-3 font-semibold text-white transition hover:opacity-90"
+      >
+        Create Account
+      </button>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-[var(--qb-muted)]">
+      Already have an account?
+      <a routerLink="/login" class="font-semibold text-[var(--qb-primary)]">Sign In</a>
+    </p>
+  </div>
+</section>

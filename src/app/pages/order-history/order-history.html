@@ -1,0 +1,69 @@
+<section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-extrabold text-[var(--qb-text)]">Order History</h1>
+    <p class="mt-2 text-[var(--qb-muted)]">
+      View all your previous orders and track current ones.
+    </p>
+  </div>
+
+  @if (orders.length) {
+    <div class="space-y-6">
+      @for (order of orders; track order.id) {
+        <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p class="text-sm text-[var(--qb-muted)]">Order ID</p>
+              <h2 class="mt-1 text-xl font-bold text-[var(--qb-text)]">#{{ order.id }}</h2>
+
+              <p class="mt-4 text-sm text-[var(--qb-muted)]">Placed At</p>
+              <p class="mt-1 font-medium text-[var(--qb-text)]">
+                {{ order.placedAt | date: 'medium' }}
+              </p>
+
+              <div class="mt-4 space-y-2">
+                @for (item of order.items; track item.name) {
+                  <p class="text-sm text-[var(--qb-muted)]">
+                    {{ item.name }} × {{ item.quantity }}
+                  </p>
+                }
+              </div>
+            </div>
+
+            <div class="lg:text-right">
+              <span
+                class="inline-flex rounded-full px-3 py-1 text-sm font-semibold"
+                [class]="getStatusClasses(order.status)"
+              >
+                {{ order.status }}
+              </span>
+
+              <p class="mt-4 text-sm text-[var(--qb-muted)]">Total</p>
+              <p class="mt-1 text-lg font-bold text-[var(--qb-text)]">₹{{ order.totalAmount }}</p>
+
+              <a
+                [routerLink]="['/orders', order.id]"
+                class="mt-5 inline-block rounded-2xl bg-[var(--qb-primary)] px-5 py-3 font-semibold text-white transition hover:opacity-90"
+              >
+                Track Order
+              </a>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
+      <h2 class="text-2xl font-bold text-[var(--qb-text)]">No orders yet</h2>
+      <p class="mt-2 text-[var(--qb-muted)]">
+        Place your first order to see it here.
+      </p>
+
+      <a
+        routerLink="/restaurants"
+        class="mt-6 inline-block rounded-2xl bg-[var(--qb-primary)] px-6 py-3 font-semibold text-white transition hover:opacity-90"
+      >
+        Explore Restaurants
+      </a>
+    </div>
+  }
+</section>

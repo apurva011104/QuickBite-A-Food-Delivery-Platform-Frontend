@@ -1,0 +1,50 @@
+@if (order) {
+  <section class="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
+      <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-3xl text-green-700">
+        ✓
+      </div>
+
+      <h1 class="mt-6 text-3xl font-extrabold text-[var(--qb-text)]">
+        Order Placed Successfully
+      </h1>
+
+      <p class="mt-3 text-[var(--qb-muted)]">
+        Your order has been placed and is now being processed.
+      </p>
+
+      <div class="mt-8 rounded-2xl bg-orange-50 p-6 text-left">
+        <p class="text-sm text-[var(--qb-muted)]">Order ID</p>
+        <p class="mt-1 text-lg font-bold text-[var(--qb-text)]">#{{ order.id }}</p>
+
+        <p class="mt-4 text-sm text-[var(--qb-muted)]">Status</p>
+        <p class="mt-1 font-semibold text-[var(--qb-primary)]">{{ order.status }}</p>
+
+        <p class="mt-4 text-sm text-[var(--qb-muted)]">Total Paid</p>
+        <p class="mt-1 font-semibold text-[var(--qb-text)]">₹{{ order.totalAmount }}</p>
+      </div>
+
+      <div class="mt-8 flex flex-wrap justify-center gap-4">
+        <a
+          routerLink="/restaurants"
+          class="rounded-2xl border border-black/10 bg-white px-6 py-3 font-semibold text-[var(--qb-text)] transition hover:bg-black/5"
+        >
+          Order More
+        </a>
+
+        <a
+          routerLink="/"
+          class="rounded-2xl bg-[var(--qb-primary)] px-6 py-3 font-semibold text-white transition hover:opacity-90"
+        >
+          Back to Home
+        </a>
+      </div>
+    </div>
+  </section>
+} @else {
+  <section class="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
+      <h1 class="text-2xl font-bold text-[var(--qb-text)]">Order not found</h1>
+    </div>
+  </section>
+}

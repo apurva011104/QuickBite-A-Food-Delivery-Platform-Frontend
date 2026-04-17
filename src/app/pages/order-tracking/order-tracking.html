@@ -1,0 +1,93 @@
+@if (order) {
+  <section class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+    <div class="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-black/5">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p class="text-sm text-[var(--qb-muted)]">Tracking Order</p>
+          <h1 class="mt-1 text-3xl font-extrabold text-[var(--qb-text)]">#{{ order.id }}</h1>
+          <p class="mt-3 text-[var(--qb-muted)]">
+            Follow your order progress in real time.
+          </p>
+        </div>
+
+        <div class="rounded-2xl bg-orange-50 px-4 py-3">
+          <p class="text-sm text-[var(--qb-muted)]">Current Status</p>
+          <p class="mt-1 font-bold text-[var(--qb-primary)]">{{ order.status }}</p>
+        </div>
+      </div>
+
+      <div class="mt-10 grid gap-4 md:grid-cols-5">
+        @for (step of statuses; track step) {
+          <div
+            class="rounded-2xl border p-4 text-center"
+            [class.border-green-200]="isStepCompleted(step)"
+            [class.bg-green-50]="isStepCompleted(step)"
+            [class.text-green-700]="isStepCompleted(step)"
+            [class.border-black/10]="!isStepCompleted(step)"
+            [class.bg-white]="!isStepCompleted(step)"
+            [class.text-[var(--qb-muted)]]="!isStepCompleted(step)"
+          >
+            <div
+              class="mx-auto flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold"
+              [class.bg-green-600]="isStepCompleted(step)"
+              [class.text-white]="isStepCompleted(step)"
+              [class.bg-gray-100]="!isStepCompleted(step)"
+            >
+              {{ $index + 1 }}
+            </div>
+
+            <p class="mt-3 text-sm font-semibold">{{ step }}</p>
+          </div>
+        }
+      </div>
+
+      <div class="mt-10 rounded-2xl bg-gray-50 p-6">
+        <h2 class="text-xl font-bold text-[var(--qb-text)]">Order Items</h2>
+
+        <div class="mt-4 space-y-3">
+          @for (item of order.items; track item.name) {
+            <div class="flex items-center justify-between">
+              <span class="text-[var(--qb-muted)]">{{ item.name }} × {{ item.quantity }}</span>
+              <span class="font-medium text-[var(--qb-text)]">₹{{ item.price * item.quantity }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="mt-6 border-t border-black/10 pt-4">
+          <div class="flex items-center justify-between text-lg font-bold text-[var(--qb-text)]">
+            <span>Total</span>
+            <span>₹{{ order.totalAmount }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-wrap gap-4">
+        <a
+          routerLink="/orders"
+          class="rounded-2xl border border-black/10 bg-white px-6 py-3 font-semibold text-[var(--qb-text)] transition hover:bg-black/5"
+        >
+          Back to Orders
+        </a>
+
+        <a
+          routerLink="/restaurants"
+          class="rounded-2xl bg-[var(--qb-primary)] px-6 py-3 font-semibold text-white transition hover:opacity-90"
+        >
+          Order Again
+        </a>
+      </div>
+    </div>
+  </section>
+} @else {
+  <section class="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
+      <h1 class="text-2xl font-bold text-[var(--qb-text)]">Order not found</h1>
+      <a
+        routerLink="/orders"
+        class="mt-6 inline-block rounded-2xl bg-[var(--qb-primary)] px-6 py-3 font-semibold text-white transition hover:opacity-90"
+      >
+        Back to Orders
+      </a>
+    </div>
+  </section>
+}

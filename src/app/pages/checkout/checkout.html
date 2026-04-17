@@ -1,0 +1,113 @@
+<section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-extrabold text-[var(--qb-text)]">Checkout</h1>
+    <p class="mt-2 text-[var(--qb-muted)]">
+      Confirm delivery details and place your order.
+    </p>
+  </div>
+
+  <div class="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
+    <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5">
+      <h2 class="text-xl font-bold text-[var(--qb-text)]">Delivery Details</h2>
+
+      <form class="mt-6 space-y-5">
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Full Address</label>
+          <textarea
+            [(ngModel)]="fullAddress"
+            name="fullAddress"
+            rows="4"
+            placeholder="Enter your delivery address"
+            class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+          ></textarea>
+        </div>
+
+        <div class="grid gap-5 md:grid-cols-2">
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">City</label>
+            <input
+              [(ngModel)]="city"
+              name="city"
+              type="text"
+              placeholder="Enter city"
+              class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+            />
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Pincode</label>
+            <input
+              [(ngModel)]="pincode"
+              name="pincode"
+              type="text"
+              placeholder="Enter pincode"
+              class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Payment Method</label>
+          <select
+            [(ngModel)]="paymentMode"
+            name="paymentMode"
+            class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+          >
+            <option value="COD">Cash on Delivery</option>
+            <option value="UPI">UPI</option>
+            <option value="CARD">Card</option>
+            <option value="WALLET">Wallet</option>
+          </select>
+        </div>
+
+        @if (errorMessage) {
+          <p class="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+            {{ errorMessage }}
+          </p>
+        }
+      </form>
+    </div>
+
+    <div class="h-fit rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5">
+      <h2 class="text-xl font-bold text-[var(--qb-text)]">Order Summary</h2>
+
+      <div class="mt-5 space-y-4">
+        @for (item of cartItems; track item.id) {
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-[var(--qb-muted)]">
+              {{ item.name }} × {{ item.quantity }}
+            </span>
+            <span class="font-medium text-[var(--qb-text)]">
+              ₹{{ item.price * item.quantity }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <div class="mt-6 space-y-4 border-t border-black/10 pt-6 text-sm">
+        <div class="flex items-center justify-between text-[var(--qb-muted)]">
+          <span>Subtotal</span>
+          <span>₹{{ subtotal }}</span>
+        </div>
+
+        <div class="flex items-center justify-between text-[var(--qb-muted)]">
+          <span>Delivery Fee</span>
+          <span>₹{{ deliveryFee }}</span>
+        </div>
+
+        <div class="flex items-center justify-between text-base font-bold text-[var(--qb-text)]">
+          <span>Total</span>
+          <span>₹{{ total }}</span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        (click)="placeOrder()"
+        class="mt-6 w-full rounded-2xl bg-[var(--qb-primary)] px-4 py-3 font-semibold text-white transition hover:opacity-90"
+      >
+        Place Order
+      </button>
+    </div>
+  </div>
+</section>

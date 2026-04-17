@@ -1,0 +1,100 @@
+@if (restaurant) {
+  <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-black/5">
+      <img
+        [src]="restaurant.image"
+        [alt]="restaurant.name"
+        class="h-72 w-full object-cover"
+      />
+
+      <div class="p-6 lg:p-8">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h1 class="text-4xl font-extrabold text-[var(--qb-text)]">{{ restaurant.name }}</h1>
+            <p class="mt-2 text-lg text-[var(--qb-muted)]">{{ restaurant.cuisine }}</p>
+            <p class="mt-4 inline-flex rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-[var(--qb-primary)]">
+              {{ restaurant.offer }}
+            </p>
+          </div>
+
+          <div class="grid gap-3 text-sm">
+            <div class="rounded-2xl bg-green-100 px-4 py-2 font-semibold text-green-700">
+              ⭐ {{ restaurant.rating }}
+            </div>
+            <div class="rounded-2xl bg-gray-100 px-4 py-2 text-[var(--qb-muted)]">
+              {{ restaurant.deliveryTime }}
+            </div>
+            <div class="rounded-2xl bg-gray-100 px-4 py-2 text-[var(--qb-muted)]">
+              {{ restaurant.deliveryFee }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-10">
+      <h2 class="text-2xl font-bold text-[var(--qb-text)]">Menu</h2>
+
+      @if (loginMessage) {
+          <p class="mt-4 rounded-2xl bg-orange-50 px-4 py-3 text-sm font-medium text-[var(--qb-primary)]">
+            {{ loginMessage }}
+          </p>
+        }
+      <div class="mt-6 grid gap-6 md:grid-cols-2">
+        @for (item of menuItems; track item.id) {
+          <div class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-black/5">
+            <img
+              [src]="item.image"
+              [alt]="item.name"
+              class="h-52 w-full object-cover"
+            />
+
+            <div class="p-5">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <p class="text-sm font-medium text-[var(--qb-muted)]">{{ item.category }}</p>
+                  <h3 class="mt-1 text-xl font-bold text-[var(--qb-text)]">{{ item.name }}</h3>
+                </div>
+
+                <span class="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700">
+                  ⭐ {{ item.rating }}
+                </span>
+              </div>
+
+              <p class="mt-3 text-sm leading-6 text-[var(--qb-muted)]">
+                {{ item.description }}
+              </p>
+
+              <div class="mt-4 flex items-center justify-between">
+                <div>
+                  <p class="text-lg font-bold text-[var(--qb-text)]">₹{{ item.price }}</p>
+                  <p class="text-sm text-[var(--qb-muted)]">
+                    {{ item.isVeg ? 'Veg' : 'Non-Veg' }}
+                  </p>
+                </div>
+
+                <button type="button"
+                        (click)="addToCart(item)"
+                        [disabled]="authService.isLoggedIn() && !authService.isCustomer()"
+                        class="rounded-2xl bg-[var(--qb-primary)] px-5 py-3 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
+                  @if (addedItemId === item.id) {
+                    Added
+                  } @else {
+                    Add to Cart
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+} @else {
+  <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
+      <h2 class="text-2xl font-bold text-[var(--qb-text)]">Restaurant not found</h2>
+      <p class="mt-2 text-[var(--qb-muted)]">Please go back and choose another restaurant.</p>
+    </div>
+  </section>
+}

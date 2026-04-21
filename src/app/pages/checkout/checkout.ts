@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CartItem } from '../../core/models/cart-item.model';
+import { CartItemResponse } from '../../core/models/cart.model';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
 import { OrderService } from '../../core/services/order.service';
@@ -13,7 +13,8 @@ import { OrderService } from '../../core/services/order.service';
   templateUrl: './checkout.html'
 })
 export class Checkout implements OnInit {
-  cartItems: CartItem[] = [];
+  cartItems: CartItemResponse[] = [];
+  restaurantId: number | null = null;
 
   fullAddress = '';
   city = '';
@@ -30,11 +31,19 @@ export class Checkout implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.cartItems = this.cartService.getCartItems();
+    this.cartService.getMyCart().subscribe({
+      next: (cart) => {
+        this.cartItems = cart.cartItems;
+        this.restaurantId = cart.restaurantId;
 
-    if (!this.cartItems.length) {
-      this.router.navigateByUrl('/cart');
-    }
+        if (!this.cartItems.length) {
+          this.router.navigateByUrl('/cart');
+        }
+      },
+      error: () => {
+        this.router.navigateByUrl('/cart');
+      }
+    });
   }
 
   get subtotal(): number {
@@ -65,13 +74,19 @@ export class Checkout implements OnInit {
     }
 
     const order = this.orderService.placeOrder({
-      customerId: user.id,
-      restaurantId: 1,
+      customerId: Date.now(),
+      restaurantId: this.restaurantId ?? 0,
       items: this.cartItems,
       totalAmount: this.total
     });
 
-    this.cartService.clearCart();
-    this.router.navigateByUrl(`/order-success/${order.id}`);
+    this.cartService.clearCart().subscribe({
+      next: () => {
+        this.router.navigateByUrl(`/order-success/${order.id}`);
+      },
+      error: () => {
+        this.router.navigateByUrl(`/order-success/${order.id}`);
+      }
+    });
   }
 }

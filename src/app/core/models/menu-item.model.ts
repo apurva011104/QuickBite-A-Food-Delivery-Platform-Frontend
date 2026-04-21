@@ -1,11 +1,25 @@
 export interface MenuItem {
-  id: number;
+  itemId: number;
   restaurantId: number;
-  category: string;
+  categoryId: number;
   name: string;
-  description: string;
+  description?: string;
   price: number;
-  isVeg: boolean;
+  discountedPrice: number;
+  imageUrl?: string;
+  veg: boolean;
+  calories: number;
+  available: boolean;
   rating: number;
-  image: string;
+  tags: string[];
+}
+
+export interface MenuCategory {
+  categoryId: number;
+  restaurantId: number;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  displayOrder: number;
+  items: MenuItem[];
 }

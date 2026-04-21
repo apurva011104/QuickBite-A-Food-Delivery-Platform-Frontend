@@ -1,20 +1,23 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { Restaurant } from '../models/restaurant.model';
-import { RESTAURANTS_MOCK } from '../mock-data/restaurants.mock';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RestaurantService {
-  getAllRestaurants(): Restaurant[] {
-    return RESTAURANTS_MOCK;
+  private readonly baseUrl = `${environment.apiBaseUrl}/restaurants`;
+
+  constructor(private readonly http: HttpClient) {}
+
+  getRestaurants(): Observable<Restaurant[]> {
+    const params = new HttpParams().set('keyword', '');
+    return this.http.get<Restaurant[]>(`${this.baseUrl}/public/search`, { params });
   }
 
-  getRestaurantById(id: number): Restaurant | undefined {
-    return RESTAURANTS_MOCK.find((restaurant) => restaurant.id === id);
-  }
-
-  getOpenRestaurants(): Restaurant[] {
-    return RESTAURANTS_MOCK.filter((restaurant) => restaurant.isOpen);
+  getRestaurantById(id: number): Observable<Restaurant> {
+    return this.http.get<Restaurant>(`${this.baseUrl}/public/${id}`);
   }
 }

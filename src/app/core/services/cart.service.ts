@@ -1,71 +1,59 @@
 import { Injectable } from '@angular/core';
-import { CartItem } from '../models/cart-item.model';
-import { MenuItem } from '../models/menu-item.model';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import {
+  CartItemRequest,
+  CartItemResponse,
+  CartRequest,
+  CartResponse
+} from '../models/cart.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
-  private readonly cartStorageKey = 'quickbite_cart';
+  private readonly baseUrl = `${environment.apiBaseUrl}/cart`;
 
-  getCartItems(): CartItem[] {
-    const raw = localStorage.getItem(this.cartStorageKey);
-    return raw ? (JSON.parse(raw) as CartItem[]) : [];
+  constructor(private readonly http: HttpClient) {}
+
+  getMyCart(): Observable<CartResponse> {
+    return this.http.get<CartResponse>(`${this.baseUrl}/me`);
   }
 
-  saveCartItems(items: CartItem[]): void {
-    localStorage.setItem(this.cartStorageKey, JSON.stringify(items));
-    window.dispatchEvent(new Event('storage'));
+  addItemToCart(payload: CartItemRequest): Observable<CartResponse> {
+    return this.http.post<CartResponse>(`${this.baseUrl}/add`, payload);
   }
 
-  addToCart(menuItem: MenuItem): { cartReset: boolean } {
-    let items = this.getCartItems();
-    let cartReset = false;
-
-    if (items.length > 0) {
-      const currentRestaurantId = items[0].restaurantId;
-
-      if (currentRestaurantId !== menuItem.restaurantId) {
-        items = [];
-        cartReset = true;
-      }
-    }
-
-    const existingItem = items.find((item) => item.menuItemId === menuItem.id);
-
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      items.push({
-        id: Date.now(),
-        menuItemId: menuItem.id,
-        restaurantId: menuItem.restaurantId,
-        name: menuItem.name,
-        price: menuItem.price,
-        quantity: 1
-      });
-    }
-
-    this.saveCartItems(items);
-    return { cartReset };
+  removeItemFromCart(itemId: number): Observable<string> {
+    return this.http.delete(`${this.baseUrl}/remove/${itemId}`, {
+      responseType: 'text'
+    });
   }
 
-  removeFromCart(menuItemId: number): void {
-    const updatedItems = this.getCartItems().filter((item) => item.menuItemId !== menuItemId);
-    this.saveCartItems(updatedItems);
+  updateCartItemQuantity(itemId: number, quantity: number): Observable<CartItemResponse> {
+    const params = new HttpParams().set('quantity', quantity);
+    return this.http.put<CartItemResponse>(`${this.baseUrl}/update/${itemId}`, {}, { params });
   }
 
-  clearCart(): void {
-    localStorage.removeItem(this.cartStorageKey);
-    window.dispatchEvent(new Event('storage'));
+  clearCart(): Observable<string> {
+    return this.http.delete(`${this.baseUrl}/clear`, {
+      responseType: 'text'
+    });
   }
 
-  getCartCount(): number {
-    return this.getCartItems().reduce((sum, item) => sum + item.quantity, 0);
+  changeRestaurant(payload: CartRequest): Observable<CartResponse> {
+    return this.http.put<CartResponse>(`${this.baseUrl}/change-restaurant`, payload);
   }
 
-  getCartRestaurantId(): number | null {
-    const items = this.getCartItems();
-    return items.length ? items[0].restaurantId : null;
+  applyPromoCode(promoCode: string): Observable<CartResponse> {
+    const params = new HttpParams().set('promoCode', promoCode);
+    return this.http.post<CartResponse>(`${this.baseUrl}/apply-promo`, {}, { params });
+  }
+
+  getCartCount(): Observable<number> {
+    return this.getMyCart().pipe(
+      map((cart) => cart.cartItems.reduce((sum, item) => sum + item.quantity, 0))
+    );
   }
 }

@@ -6,15 +6,8 @@ export const authGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const user = authService.getLoggedInUser();
-
-  if (!user) {
-      router.navigate(['/login'], { queryParams: { returnUrl: '/cart' } });
-      return false;
-    }
-
-  if (user.role !== 'CUSTOMER') {
-    router.navigateByUrl('/');
+  if (!authService.isLoggedIn()) {
+    router.navigateByUrl('/login');
     return false;
   }
 

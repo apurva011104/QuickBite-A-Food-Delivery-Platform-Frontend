@@ -11,10 +11,21 @@ import { RestaurantService } from '../../core/services/restaurant.service';
 })
 export class Restaurants implements OnInit {
   restaurants: Restaurant[] = [];
+  loading = true;
+  errorMessage = '';
 
   constructor(private readonly restaurantService: RestaurantService) {}
 
   ngOnInit(): void {
-    this.restaurants = this.restaurantService.getAllRestaurants();
+    this.restaurantService.getRestaurants().subscribe({
+      next: (restaurants) => {
+        this.restaurants = restaurants;
+        this.loading = false;
+      },
+      error: () => {
+        this.errorMessage = 'Unable to load restaurants.';
+        this.loading = false;
+      }
+    });
   }
 }

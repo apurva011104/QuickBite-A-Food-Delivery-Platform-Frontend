@@ -28,18 +28,22 @@
         Restaurants
       </a>
 
-      <a routerLink="/cart" routerLinkActive="text-[var(--qb-primary)]"
-          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]">
-        Cart
-        @if (cartCount > 0) {
-          <span class="ml-1 rounded-full bg-[var(--qb-primary)] px-2 py-0.5 text-xs text-white">
-            {{ cartCount }}
-          </span>
-        }
-      </a>
-
       @if (currentUser?.role === 'CUSTOMER') {
-        <a routerLink="/orders"
+        <a
+          routerLink="/cart"
+          routerLinkActive="text-[var(--qb-primary)]"
+          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
+        >
+          Cart
+          @if (cartCount > 0) {
+            <span class="ml-1 rounded-full bg-[var(--qb-primary)] px-2 py-0.5 text-xs text-white">
+              {{ cartCount }}
+            </span>
+          }
+        </a>
+
+        <a
+          routerLink="/orders"
           routerLinkActive="text-[var(--qb-primary)]"
           class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
         >
@@ -48,11 +52,10 @@
       }
     </nav>
 
-
     <div class="hidden items-center gap-3 md:flex">
       @if (currentUser) {
         <div class="text-right">
-          <p class="text-sm font-semibold text-[var(--qb-text)]">{{ currentUser.firstName }} {{ currentUser.lastName }}</p>
+          <p class="text-sm font-semibold text-[var(--qb-text)]">{{ currentUser.name }}</p>
           <p class="text-xs text-[var(--qb-muted)]">{{ currentUser.role }}</p>
         </div>
 
@@ -101,16 +104,16 @@
           Restaurants
         </a>
 
-        <a routerLink="/cart" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
-          Cart
-          @if (cartCount > 0) {
-            <span class="ml-1 rounded-full bg-[var(--qb-primary)] px-2 py-0.5 text-xs text-white">
-              {{ cartCount }}
-            </span>
-          }
-        </a>
-
         @if (currentUser?.role === 'CUSTOMER') {
+          <a routerLink="/cart" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
+            Cart
+            @if (cartCount > 0) {
+              <span class="ml-1 rounded-full bg-[var(--qb-primary)] px-2 py-0.5 text-xs text-white">
+                {{ cartCount }}
+              </span>
+            }
+          </a>
+
           <a routerLink="/orders" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
             Orders
           </a>
@@ -118,7 +121,7 @@
 
         @if (currentUser) {
           <div class="rounded-2xl bg-orange-50 px-3 py-3">
-            <p class="text-sm font-semibold text-[var(--qb-text)]">{{ currentUser.firstName }} {{ currentUser.lastName }}</p>
+            <p class="text-sm font-semibold text-[var(--qb-text)]">{{ currentUser.name }}</p>
             <p class="text-xs text-[var(--qb-muted)]">{{ currentUser.role }}</p>
           </div>
 

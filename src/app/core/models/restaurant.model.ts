@@ -1,11 +1,20 @@
 export interface Restaurant {
-  id: number;
+  restaurantId: number;
+  ownerId?: number;
   name: string;
+  description?: string;
   cuisine: string;
-  rating: number;
-  deliveryTime: string;
-  deliveryFee: string;
-  image: string;
-  offer?: string;
-  isOpen: boolean;
+  address?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+  phone?: string;
+  avgRating?: number;
+  open: boolean;
+  approved: boolean;
+  deliveryRadius?: number;
+  minOrderAmount?: number;
+  estimatedDeliveryMin?: number;
+  rejectionReason?: string | null;
+  ratingCount?: number;
 }

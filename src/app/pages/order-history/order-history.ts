@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { Order } from '../../core/models/order.model';
 import { AuthService } from '../../core/services/auth.service';
 import { OrderService } from '../../core/services/order.service';
-import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-order-history',
@@ -20,10 +20,8 @@ export class OrderHistory implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const user = this.authService.getLoggedInUser();
-
-    if (user && user.role === 'CUSTOMER') {
-      this.orders = this.orderService.getOrdersByCustomerId(user.id);
+    if (this.authService.isCustomer()) {
+      this.orders = this.orderService.getOrders();
     }
   }
 

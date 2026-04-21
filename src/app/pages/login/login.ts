@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { LoginType } from '../../core/models/auth.model';
 
 @Component({
   selector: 'app-login',
@@ -22,15 +23,22 @@ export class Login {
   onLogin(): void {
     this.errorMessage = '';
 
-    const user = this.authService.login(this.identifier, this.password.trim());
+    const trimmedIdentifier = this.identifier.trim();
+    const loginType: LoginType = trimmedIdentifier.includes('@') ? 'EMAIL' : 'PHONE';
 
-    if (!user) {
-      this.errorMessage = 'Invalid email/phone or password.';
-      return;
-    }
-
-    const redirectRoute = this.authService.getRedirectRouteByRole(user.role);
-    this.router.navigateByUrl(redirectRoute);
+    this.authService.login({
+      identifier: trimmedIdentifier,
+      password: this.password.trim(),
+      loginType
+    }).subscribe({
+      next: (user) => {
+        const redirectRoute = this.authService.getRedirectRouteByRole(user.role);
+        this.router.navigateByUrl(redirectRoute);
+      },
+      error: () => {
+        this.errorMessage = 'Invalid email/phone or password.';
+      }
+    });
   }
 
   fillDemoCredentials(role: 'CUSTOMER' | 'OWNER' | 'AGENT' | 'ADMIN'): void {

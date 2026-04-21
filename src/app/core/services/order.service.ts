@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Order } from '../models/order.model';
-import { CartItem } from '../models/cart-item.model';
+import { CartItemResponse } from '../models/cart.model';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +20,7 @@ export class OrderService {
   placeOrder(orderData: {
     customerId: number;
     restaurantId: number;
-    items: CartItem[];
+    items: CartItemResponse[];
     totalAmount: number;
   }): Order {
     const orders = this.getOrders();

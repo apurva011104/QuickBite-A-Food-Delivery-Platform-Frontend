@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CartItem } from '../../core/models/cart-item.model';
+import { CartItemResponse } from '../../core/models/cart.model';
 import { CartService } from '../../core/services/cart.service';
 
 @Component({
@@ -10,7 +10,10 @@ import { CartService } from '../../core/services/cart.service';
   templateUrl: './cart.html'
 })
 export class Cart implements OnInit {
-  items: CartItem[] = [];
+  items: CartItemResponse[] = [];
+  restaurantId: number | null = null;
+  totalPrice = 0;
+  loading = true;
 
   constructor(private readonly cartService: CartService) {}
 
@@ -19,17 +22,30 @@ export class Cart implements OnInit {
   }
 
   loadCart(): void {
-    this.items = this.cartService.getCartItems();
+    this.cartService.getMyCart().subscribe({
+      next: (cart) => {
+        this.items = cart.cartItems;
+        this.restaurantId = cart.restaurantId;
+        this.totalPrice = cart.totalPrice;
+        this.loading = false;
+      },
+      error: () => {
+        this.items = [];
+        this.loading = false;
+      }
+    });
   }
 
-  removeItem(menuItemId: number): void {
-    this.cartService.removeFromCart(menuItemId);
-    this.loadCart();
+  removeItem(itemId: number): void {
+    this.cartService.removeItemFromCart(itemId).subscribe({
+      next: () => this.loadCart()
+    });
   }
 
   clearCart(): void {
-    this.cartService.clearCart();
-    this.loadCart();
+    this.cartService.clearCart().subscribe({
+      next: () => this.loadCart()
+    });
   }
 
   get subtotal(): number {

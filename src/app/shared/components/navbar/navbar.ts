@@ -2,7 +2,7 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
-import { User } from '../../../core/models/user.model';
+import { AuthResponse } from '../../../core/models/auth.model';
 
 @Component({
   selector: 'app-navbar',
@@ -12,7 +12,7 @@ import { User } from '../../../core/models/user.model';
 })
 export class Navbar implements OnInit {
   mobileMenuOpen = false;
-  currentUser: User | null = null;
+  currentUser: AuthResponse | null = null;
   cartCount = 0;
 
   constructor(
@@ -45,13 +45,36 @@ export class Navbar implements OnInit {
   }
 
   loadCartCount(): void {
-    this.cartCount = this.cartService.getCartCount();
+    if (!this.authService.isCustomer()) {
+      this.cartCount = 0;
+      return;
+    }
+
+    this.cartService.getCartCount().subscribe({
+      next: (count) => {
+        this.cartCount = count;
+      },
+      error: () => {
+        this.cartCount = 0;
+      }
+    });
   }
 
   logout(): void {
-    this.authService.logout();
-    this.currentUser = null;
-    this.mobileMenuOpen = false;
-    this.router.navigateByUrl('/login');
+    this.authService.logout().subscribe({
+      next: () => {
+        this.currentUser = null;
+        this.cartCount = 0;
+        this.mobileMenuOpen = false;
+        this.router.navigateByUrl('/login');
+      },
+      error: () => {
+        this.authService.clearAuthData();
+        this.currentUser = null;
+        this.cartCount = 0;
+        this.mobileMenuOpen = false;
+        this.router.navigateByUrl('/login');
+      }
+    });
   }
 }

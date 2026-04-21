@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { UserRole } from '../../core/models/user.model';
+import { UserRole } from '../../core/models/auth.model';
 
 @Component({
   selector: 'app-signup',
@@ -48,24 +48,20 @@ export class Signup {
       return;
     }
 
-    const response = this.authService.signup({
-      firstName: this.firstName,
-      lastName: this.lastName,
-      email: this.email,
-      phone: this.phone,
+    this.authService.signup({
+      name: `${this.firstName.trim()} ${this.lastName.trim()}`,
+      email: this.email.trim(),
+      phoneNumber: this.phone.trim(),
       password: this.password,
       role: this.role
+    }).subscribe({
+      next: () => {
+        this.successMessage = 'Account created successfully.';
+        setTimeout(() => this.router.navigateByUrl('/login'), 1200);
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.message || 'Signup failed.';
+      }
     });
-
-    if (!response.success) {
-      this.errorMessage = response.message;
-      return;
-    }
-
-    this.successMessage = response.message;
-
-    setTimeout(() => {
-      this.router.navigateByUrl('/login');
-    }, 1200);
   }
 }

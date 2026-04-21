@@ -22,7 +22,7 @@
     <div class="grid gap-8 lg:grid-cols-[1.6fr_1fr]">
       <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5">
         <div class="space-y-5">
-          @for (item of items; track item.id) {
+          @for (item of items; track item.itemId) {
             <div class="flex items-center justify-between gap-4 rounded-2xl border border-black/5 p-4">
               <div>
                 <h3 class="font-bold text-[var(--qb-text)]">{{ item.name }}</h3>
@@ -33,7 +33,7 @@
                 <p class="font-semibold text-[var(--qb-text)]">₹{{ item.price * item.quantity }}</p>
                 <button
                   type="button"
-                  (click)="removeItem(item.menuItemId)"
+                  (click)="removeItem(item.itemId)"
                   class="mt-2 text-sm font-medium text-red-600"
                 >
                   Remove

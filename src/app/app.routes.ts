@@ -19,14 +19,14 @@ export const routes: Routes = [
     children: [
       { path: '', component: Home },
       { path: 'restaurants', component: Restaurants },
+      { path: 'restaurants/:id', component: RestaurantDetails },
       { path: 'login', component: Login },
       { path: 'signup', component: Signup },
       { path: 'cart', component: Cart, canActivate: [customerGuard] },
-      { path: 'restaurants/:id', component: RestaurantDetails },
       { path: 'checkout', component: Checkout, canActivate: [customerGuard] },
       { path: 'order-success/:id', component: OrderSuccess, canActivate: [customerGuard] },
       { path: 'orders', component: OrderHistory, canActivate: [customerGuard] },
-{ path: 'orders/:id', component: OrderTracking, canActivate: [customerGuard] },
+      { path: 'orders/:id', component: OrderTracking, canActivate: [customerGuard] }
     ]
   },
   { path: '**', redirectTo: '' }

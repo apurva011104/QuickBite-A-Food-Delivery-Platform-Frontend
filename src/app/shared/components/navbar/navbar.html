@@ -50,7 +50,34 @@
           Orders
         </a>
       }
+
+      @if (currentUser?.role === 'OWNER') {
+        <a
+          routerLink="/owner"
+          routerLinkActive="text-[var(--qb-primary)]"
+          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
+        >
+          My Restaurants
+        </a>
+        <a
+          routerLink="/owner/menu"
+          routerLinkActive="text-[var(--qb-primary)]"
+          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
+        >
+          Manage Menu
+        </a>
+      }
     </nav>
+    
+    @if (currentUser?.role === 'ADMIN') {
+  <a
+    routerLink="/admin"
+    routerLinkActive="text-[var(--qb-primary)]"
+    class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
+  >
+    Admin Dashboard
+  </a>
+}
 
     <div class="hidden items-center gap-3 md:flex">
       @if (currentUser) {
@@ -116,6 +143,15 @@
 
           <a routerLink="/orders" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
             Orders
+          </a>
+        }
+
+        @if (currentUser?.role === 'OWNER') {
+          <a routerLink="/owner" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
+            My restaurants
+          </a>
+          <a routerLink="/owner/menu" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
+            Manage Menu
           </a>
         }
 

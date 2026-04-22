@@ -1,13 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Restaurant } from '../../core/models/restaurant.model';
-import { MenuCategory, MenuItem } from '../../core/models/menu-item.model';
+import { MenuItem } from '../../core/models/menu-item.model';
 import { RestaurantService } from '../../core/services/restaurant.service';
 import { MenuService } from '../../core/services/menu.service';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
-
-type DisplayMenuItem = MenuItem & { categoryName: string };
 
 @Component({
   selector: 'app-restaurant-details',
@@ -17,7 +15,8 @@ type DisplayMenuItem = MenuItem & { categoryName: string };
 })
 export class RestaurantDetails implements OnInit {
   restaurant: Restaurant | undefined;
-  menuItems: DisplayMenuItem[] = [];
+  menuItems: MenuItem[] = [];
+  restaurantImage = 'https://via.placeholder.com/1200x500?text=QuickBite';
   addedItemId: number | null = null;
   loginMessage = '';
   loading = true;
@@ -29,40 +28,51 @@ export class RestaurantDetails implements OnInit {
     private readonly restaurantService: RestaurantService,
     private readonly menuService: MenuService,
     private readonly cartService: CartService,
-    public readonly authService: AuthService
+    public readonly authService: AuthService,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     const restaurantId = Number(this.route.snapshot.paramMap.get('id'));
+    this.loadRestaurantDetails(restaurantId);
+  }
+
+  loadRestaurantDetails(restaurantId: number): void {
+    this.loading = true;
+    this.errorMessage = '';
 
     this.restaurantService.getRestaurantById(restaurantId).subscribe({
-      next: (restaurant) => {
+      next: (restaurant: Restaurant) => {
         this.restaurant = restaurant;
+        this.cdr.detectChanges();
       },
-      error: () => {
-        this.errorMessage = 'Restaurant not found.';
+      error: (err: any) => {
+        this.errorMessage = err?.error?.message || 'Restaurant not found.';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
 
-    this.menuService.getFullMenuByRestaurant(restaurantId).subscribe({
-      next: (categories: MenuCategory[]) => {
-        this.menuItems = categories.flatMap((category) =>
-          category.items.map((item) => ({
-            ...item,
-            categoryName: category.name
-          }))
-        );
+    this.menuService.getItemsByRestaurant(restaurantId).subscribe({
+      next: (items: MenuItem[]) => {
+        this.menuItems = [...items];
+
+        const firstImage = items.find((item) => item.imageUrl)?.imageUrl;
+        this.restaurantImage =
+          firstImage || 'https://via.placeholder.com/1200x500?text=QuickBite';
+
         this.loading = false;
+        this.cdr.detectChanges();
       },
-      error: () => {
-        this.errorMessage = 'Unable to load menu.';
+      error: (err: any) => {
+        this.errorMessage = err?.error?.message || 'Unable to load menu.';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
-  addToCart(item: DisplayMenuItem): void {
+  addToCart(item: MenuItem): void {
     if (!this.authService.isLoggedIn()) {
       this.loginMessage = 'Please login as a customer to add items to cart.';
       setTimeout(() => this.router.navigateByUrl('/login'), 800);
@@ -81,12 +91,16 @@ export class RestaurantDetails implements OnInit {
       next: () => {
         this.loginMessage = '';
         this.addedItemId = item.itemId;
+        this.cdr.detectChanges();
+
         setTimeout(() => {
           this.addedItemId = null;
+          this.cdr.detectChanges();
         }, 1000);
       },
-      error: () => {
-        this.loginMessage = 'Unable to add item to cart.';
+      error: (err: any) => {
+        this.loginMessage = err?.error?.message || 'Unable to add item to cart.';
+        this.cdr.detectChanges();
       }
     });
   }

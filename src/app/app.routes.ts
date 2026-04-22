@@ -11,6 +11,11 @@ import { Checkout } from './pages/checkout/checkout';
 import { OrderSuccess } from './pages/order-success/order-success';
 import { OrderHistory } from './pages/order-history/order-history';
 import { OrderTracking } from './pages/order-tracking/order-tracking';
+import { ownerGuard } from './core/guards/owner.guard';
+import { OwnerDashboard } from './pages/owner-dashboard/owner-dashboard';
+import { OwnerMenu } from './pages/owner-menu/owner-menu';
+import { AdminDashboard } from './pages/admin-dashboard/admin-dashboard';
+import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
   {
@@ -26,7 +31,10 @@ export const routes: Routes = [
       { path: 'checkout', component: Checkout, canActivate: [customerGuard] },
       { path: 'order-success/:id', component: OrderSuccess, canActivate: [customerGuard] },
       { path: 'orders', component: OrderHistory, canActivate: [customerGuard] },
-      { path: 'orders/:id', component: OrderTracking, canActivate: [customerGuard] }
+      { path: 'orders/:id', component: OrderTracking, canActivate: [customerGuard] },
+      { path: 'owner', component: OwnerDashboard, canActivate: [ownerGuard] },
+      { path: 'owner/menu', component: OwnerMenu, canActivate: [ownerGuard] },
+      { path: 'admin', component: AdminDashboard, canActivate: [adminGuard] },
     ]
   },
   { path: '**', redirectTo: '' }

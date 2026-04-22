@@ -1,0 +1,89 @@
+<section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+  <h1 class="text-3xl font-extrabold text-[var(--qb-text)]">
+    Admin Dashboard
+  </h1>
+
+  <p class="mt-2 text-[var(--qb-muted)]">
+    Approve or reject restaurant registrations.
+  </p>
+
+  <div class="mt-6">
+    <button
+      type="button"
+      (click)="loadPending()"
+      class="rounded-xl border px-4 py-2 text-sm font-semibold"
+    >
+      Refresh
+    </button>
+  </div>
+
+  @if (errorMessage) {
+    <div class="mt-6 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (successMessage) {
+    <div class="mt-6 rounded-2xl bg-green-50 px-4 py-3 text-sm text-green-700">
+      {{ successMessage }}
+    </div>
+  }
+
+  @if (loading) {
+    <p class="mt-6 text-sm text-[var(--qb-muted)]">Loading...</p>
+  } @else if (!pendingRestaurants.length) {
+    <p class="mt-6 text-sm text-[var(--qb-muted)]">
+      No pending restaurants.
+    </p>
+  } @else {
+    <div class="mt-8 space-y-6">
+      @for (restaurant of pendingRestaurants; track restaurant.restaurantId) {
+        <div class="rounded-3xl border border-black/10 p-6">
+          <div class="flex items-start justify-between gap-6">
+            <div class="flex-1">
+              <h3 class="text-xl font-bold text-[var(--qb-text)]">
+                {{ restaurant.name }}
+              </h3>
+
+              <p class="mt-2 text-sm text-[var(--qb-muted)]">
+                {{ restaurant.cuisine }} • {{ restaurant.city }}
+              </p>
+
+              <p class="mt-2 text-sm text-[var(--qb-muted)]">
+                {{ restaurant.description }}
+              </p>
+
+              <p class="mt-2 text-sm text-[var(--qb-muted)]">
+                Min Order: ₹{{ restaurant.minOrderAmount ?? 0 }} • ETA: {{ restaurant.estimatedDeliveryMin ?? 0 }} min
+              </p>
+            </div>
+
+            <div class="w-full max-w-xs space-y-3">
+              <button
+                type="button"
+                (click)="approve(restaurant.restaurantId)"
+                class="w-full rounded-xl bg-green-600 px-4 py-2 text-white"
+              >
+                Approve
+              </button>
+
+              <input
+                [(ngModel)]="rejectionReasonMap[restaurant.restaurantId]"
+                placeholder="Reason"
+                class="w-full rounded-xl border px-3 py-2 text-sm"
+              />
+
+              <button
+                type="button"
+                (click)="reject(restaurant.restaurantId)"
+                class="w-full rounded-xl bg-red-600 px-4 py-2 text-white"
+              >
+                Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>

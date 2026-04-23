@@ -1,0 +1,239 @@
+<section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+  <div class="mb-8 flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-extrabold text-[var(--qb-text)]">Delivery Dashboard</h1>
+      <p class="mt-2 text-[var(--qb-muted)]">
+        Manage your delivery profile, availability, live location, and assigned deliveries.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      (click)="loadAgentDashboard()"
+      class="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-[var(--qb-text)] transition hover:bg-black/5"
+    >
+      Refresh
+    </button>
+  </div>
+
+  @if (errorMessage) {
+    <div class="mb-6 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (successMessage) {
+    <div class="mb-6 rounded-2xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+      {{ successMessage }}
+    </div>
+  }
+
+  @if (loading) {
+    <div class="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
+      Loading dashboard...
+    </div>
+  } @else if (!agent) {
+    <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5">
+      <h2 class="text-2xl font-bold text-[var(--qb-text)]">Register as Delivery Agent</h2>
+      <p class="mt-2 text-[var(--qb-muted)]">
+        Complete your delivery profile to start receiving delivery assignments.
+      </p>
+
+      <form class="mt-6 space-y-5" (ngSubmit)="registerAgent()">
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Full Name</label>
+          <input
+            [(ngModel)]="registerForm.fullName"
+            name="fullName"
+            type="text"
+            class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+          />
+        </div>
+
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Phone</label>
+          <input
+            [(ngModel)]="registerForm.phone"
+            name="phone"
+            type="text"
+            class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+          />
+        </div>
+
+        <div class="grid gap-5 md:grid-cols-2">
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Vehicle Type</label>
+            <select
+              [(ngModel)]="registerForm.vehicleType"
+              name="vehicleType"
+              class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+            >
+              <option value="BIKE">Bike</option>
+              <option value="SCOOTER">Scooter</option>
+              <option value="CYCLE">Cycle</option>
+              <option value="TRUCK">Truck</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Vehicle Number</label>
+            <input
+              [(ngModel)]="registerForm.vehicleNumber"
+              name="vehicleNumber"
+              type="text"
+              class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="registering"
+          class="w-full rounded-2xl bg-[var(--qb-primary)] px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+        >
+          {{ registering ? 'Registering...' : 'Register as Agent' }}
+        </button>
+      </form>
+    </div>
+  } @else {
+    <div class="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
+      <div class="space-y-8">
+        <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-[var(--qb-text)]">{{ agent.fullName }}</h2>
+              <p class="mt-1 text-[var(--qb-muted)]">{{ agent.vehicleType }} • {{ agent.vehicleNumber }}</p>
+            </div>
+
+            <div class="text-right">
+              <p class="text-sm text-[var(--qb-muted)]">Verification</p>
+              <p
+                class="mt-1 font-semibold"
+                [class.text-green-700]="agent.verified"
+                [class.text-yellow-700]="!agent.verified"
+              >
+                {{ agent.verified ? 'Verified' : 'Pending Verification' }}
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-6 grid gap-4 sm:grid-cols-3">
+            <div class="rounded-2xl bg-orange-50 px-4 py-4">
+              <p class="text-sm text-[var(--qb-muted)]">Availability</p>
+              <p class="mt-1 text-lg font-bold text-[var(--qb-text)]">
+                {{ agent.available ? 'Online' : 'Offline' }}
+              </p>
+            </div>
+
+            <div class="rounded-2xl bg-orange-50 px-4 py-4">
+              <p class="text-sm text-[var(--qb-muted)]">Avg Rating</p>
+              <p class="mt-1 text-lg font-bold text-[var(--qb-text)]">
+                {{ agent.avgRating ?? 0 }}
+              </p>
+            </div>
+
+            <div class="rounded-2xl bg-orange-50 px-4 py-4">
+              <p class="text-sm text-[var(--qb-muted)]">Total Deliveries</p>
+              <p class="mt-1 text-lg font-bold text-[var(--qb-text)]">
+                {{ agent.totalDeliveries }}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            (click)="toggleAvailability()"
+            [disabled]="updatingAvailability"
+            class="mt-6 w-full rounded-2xl bg-[var(--qb-text)] px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+          >
+            {{ updatingAvailability
+              ? 'Updating...'
+              : (agent.available ? 'Go Offline' : 'Go Online') }}
+          </button>
+        </div>
+
+        <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5">
+          <h2 class="text-xl font-bold text-[var(--qb-text)]">Update Live Location</h2>
+          <p class="mt-2 text-sm text-[var(--qb-muted)]">
+            Keep your location current so orders can be assigned properly.
+          </p>
+
+          <div class="mt-6 grid gap-5 md:grid-cols-2">
+            <div>
+              <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Latitude</label>
+              <input
+                [(ngModel)]="latitude"
+                name="latitude"
+                type="number"
+                step="0.000001"
+                class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+              />
+            </div>
+
+            <div>
+              <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Longitude</label>
+              <input
+                [(ngModel)]="longitude"
+                name="longitude"
+                type="number"
+                step="0.000001"
+                class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            (click)="updateLocation()"
+            [disabled]="updatingLocation"
+            class="mt-6 w-full rounded-2xl border border-[var(--qb-primary)] px-4 py-3 font-semibold text-[var(--qb-primary)] transition hover:bg-orange-50 disabled:opacity-50"
+          >
+            {{ updatingLocation ? 'Updating Location...' : 'Update Location' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5">
+        <h2 class="text-xl font-bold text-[var(--qb-text)]">Active Deliveries</h2>
+        <p class="mt-2 text-sm text-[var(--qb-muted)]">
+          Deliveries currently assigned to you.
+        </p>
+
+        @if (activeDeliveries.length) {
+          <div class="mt-6 space-y-4">
+            @for (delivery of activeDeliveries; track delivery.orderId) {
+              <div class="rounded-2xl border border-black/10 p-4">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <p class="text-sm text-[var(--qb-muted)]">Order ID</p>
+                    <h3 class="mt-1 text-lg font-bold text-[var(--qb-text)]">#{{ delivery.orderId }}</h3>
+
+                    <p class="mt-3 text-sm text-[var(--qb-muted)]">Status</p>
+                    <p class="mt-1 font-semibold text-[var(--qb-primary)]">{{ delivery.status }}</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    (click)="completeDelivery(delivery.orderId)"
+                    [disabled]="completingDeliveryId === delivery.orderId"
+                    class="rounded-2xl bg-green-600 px-4 py-2 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    {{
+                      completingDeliveryId === delivery.orderId
+                        ? 'Completing...'
+                        : 'Mark Delivered'
+                    }}
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="mt-6 rounded-2xl bg-orange-50 px-4 py-5 text-sm text-[var(--qb-muted)]">
+            No active deliveries right now.
+          </div>
+        }
+      </div>
+    </div>
+  }
+</section>

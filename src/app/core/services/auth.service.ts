@@ -87,7 +87,7 @@ export class AuthService {
       case 'OWNER':
         return '/owner';
       case 'AGENT':
-        return '/';
+        return '/delivery';
       case 'ADMIN':
         return '/admin';
       default:

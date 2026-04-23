@@ -21,6 +21,9 @@ import { AdminNotifications } from './pages/admin-notifications/admin-notificati
 import { authGuard } from './core/guards/auth.guard';
 import { OAuthSuccess } from './pages/oauth-success/oauth-success';
 import { Profile } from './pages/profile/profile';
+import { DeliveryDashboard } from './pages/delivery-dashboard/delivery-dashboard';
+import { agentGuard } from './core/guards/agent.guard';
+import { AdminDelivery } from './pages/admin-delivery/admin-delivery';
 
 export const routes: Routes = [
   {
@@ -43,7 +46,9 @@ export const routes: Routes = [
       { path: 'notifications', component: Notifications, canActivate: [authGuard] },
       { path: 'admin/notifications', component: AdminNotifications, canActivate: [adminGuard] },
       { path: 'oauth-success', component: OAuthSuccess },
-      { path: 'profile', component: Profile, canActivate: [authGuard] }
+      { path: 'profile', component: Profile, canActivate: [authGuard] },
+      { path: 'delivery', component: DeliveryDashboard, canActivate: [agentGuard] },
+      { path: 'admin/delivery', component: AdminDelivery, canActivate: [adminGuard]}
     ]
   },
   { path: '**', redirectTo: '' }

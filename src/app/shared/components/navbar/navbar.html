@@ -87,6 +87,26 @@
         </a>
       }
 
+      @if (currentUser?.role === 'ADMIN') {
+        <a
+          routerLink="/admin/delivery"
+          routerLinkActive="text-[var(--qb-primary)]"
+          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
+        >
+          Delivery
+        </a>
+      }
+
+      @if (currentUser?.role === 'AGENT') {
+        <a
+          routerLink="/delivery"
+          routerLinkActive="text-[var(--qb-primary)]"
+          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
+        >
+          Delivery Agent Dashboard
+        </a>
+      }
+
       @if (currentUser) {
         <a
           routerLink="/profile"
@@ -197,6 +217,18 @@
 
           <a routerLink="/admin/notifications" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
             Admin Alerts
+          </a>
+        }
+
+        @if (currentUser?.role === 'ADMIN') {
+          <a routerLink="/admin/delivery" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
+            Delivery Dashboard
+          </a>
+        }
+
+        @if (currentUser?.role === 'AGENT') {
+          <a routerLink="/delivery" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
+            Delivery Agent Dashboard
           </a>
         }
 

@@ -1,7 +1,8 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { Restaurant } from '../../core/models/restaurant.model';
-import { MenuItem } from '../../core/models/menu-item.model';
+import { MenuCategory, MenuItem } from '../../core/models/menu-item.model';
 import { RestaurantService } from '../../core/services/restaurant.service';
 import { MenuService } from '../../core/services/menu.service';
 import { CartService } from '../../core/services/cart.service';
@@ -10,17 +11,23 @@ import { AuthService } from '../../core/services/auth.service';
 @Component({
   selector: 'app-restaurant-details',
   standalone: true,
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './restaurant-details.html'
 })
 export class RestaurantDetails implements OnInit {
   restaurant: Restaurant | undefined;
   menuItems: MenuItem[] = [];
+  fullMenu: MenuCategory[] = [];
   restaurantImage = 'https://via.placeholder.com/1200x500?text=QuickBite';
   addedItemId: number | null = null;
   loginMessage = '';
   loading = true;
   errorMessage = '';
+
+  searchText = '';
+  foodType: 'ALL' | 'VEG' | 'NON_VEG' = 'ALL';
+  maxPrice: number | null = null;
+  selectedCategoryId: number | 'ALL' = 'ALL';
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -53,11 +60,12 @@ export class RestaurantDetails implements OnInit {
       }
     });
 
-    this.menuService.getItemsByRestaurant(restaurantId).subscribe({
-      next: (items: MenuItem[]) => {
-        this.menuItems = [...items];
+    this.menuService.getFullMenuByRestaurant(restaurantId).subscribe({
+      next: (categories: MenuCategory[]) => {
+        this.fullMenu = [...categories];
+        this.menuItems = categories.flatMap((category) => category.items || []);
 
-        const firstImage = items.find((item) => item.imageUrl)?.imageUrl;
+        const firstImage = this.menuItems.find((item) => item.imageUrl)?.imageUrl;
         this.restaurantImage =
           firstImage || 'https://via.placeholder.com/1200x500?text=QuickBite';
 
@@ -69,6 +77,28 @@ export class RestaurantDetails implements OnInit {
         this.loading = false;
         this.cdr.detectChanges();
       }
+    });
+  }
+
+  get filteredItems(): MenuItem[] {
+    return this.menuItems.filter((item) => {
+      const matchesSearch =
+        !this.searchText.trim() ||
+        item.name.toLowerCase().includes(this.searchText.trim().toLowerCase());
+
+      const matchesFoodType =
+        this.foodType === 'ALL' ||
+        (this.foodType === 'VEG' && item.veg) ||
+        (this.foodType === 'NON_VEG' && !item.veg);
+
+      const itemPrice = item.discountedPrice || item.price;
+      const matchesPrice =
+        this.maxPrice === null || itemPrice <= this.maxPrice;
+
+      const matchesCategory =
+        this.selectedCategoryId === 'ALL' || item.categoryId === this.selectedCategoryId;
+
+      return matchesSearch && matchesFoodType && matchesPrice && matchesCategory;
     });
   }
 

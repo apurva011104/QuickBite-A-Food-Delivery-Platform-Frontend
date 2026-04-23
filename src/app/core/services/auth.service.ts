@@ -64,7 +64,7 @@ export class AuthService {
       case 'AGENT':
         return '/';
       case 'ADMIN':
-        return '/';
+        return '/admin';
       default:
         return '/';
     }
@@ -80,6 +80,10 @@ export class AuthService {
 
   isAgent(): boolean {
     return this.getLoggedInUser()?.role === 'AGENT';
+  }
+
+  isAdmin(): boolean {
+    return this.getLoggedInUser()?.role === 'ADMIN';
   }
 
   clearAuthData(): void {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CartItemResponse } from '../../core/models/cart.model';
 import { CartService } from '../../core/services/cart.service';
@@ -14,37 +14,57 @@ export class Cart implements OnInit {
   restaurantId: number | null = null;
   totalPrice = 0;
   loading = true;
+  errorMessage = '';
 
-  constructor(private readonly cartService: CartService) {}
+  constructor(
+    private readonly cartService: CartService,
+    private readonly cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.loadCart();
   }
 
   loadCart(): void {
+    this.loading = true;
+    this.errorMessage = '';
+
     this.cartService.getMyCart().subscribe({
       next: (cart) => {
-        this.items = cart.cartItems;
+        this.items = [...cart.cartItems];
         this.restaurantId = cart.restaurantId;
         this.totalPrice = cart.totalPrice;
         this.loading = false;
+        this.cdr.detectChanges();
       },
-      error: () => {
+      error: (err: any) => {
         this.items = [];
+        this.restaurantId = null;
+        this.totalPrice = 0;
         this.loading = false;
+        this.errorMessage = err?.error?.message || '';
+        this.cdr.detectChanges();
       }
     });
   }
 
   removeItem(itemId: number): void {
     this.cartService.removeItemFromCart(itemId).subscribe({
-      next: () => this.loadCart()
+      next: () => this.loadCart(),
+      error: (err: any) => {
+        this.errorMessage = err?.error?.message || 'Unable to remove item.';
+        this.cdr.detectChanges();
+      }
     });
   }
 
   clearCart(): void {
     this.cartService.clearCart().subscribe({
-      next: () => this.loadCart()
+      next: () => this.loadCart(),
+      error: (err: any) => {
+        this.errorMessage = err?.error?.message || 'Unable to clear cart.';
+        this.cdr.detectChanges();
+      }
     });
   }
 

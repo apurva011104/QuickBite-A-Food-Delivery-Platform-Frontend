@@ -1,7 +1,9 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { AuthResponse } from '../../../core/models/auth.model';
 
 @Component({
@@ -10,26 +12,36 @@ import { AuthResponse } from '../../../core/models/auth.model';
   imports: [RouterLink, RouterLinkActive],
   templateUrl: './navbar.html'
 })
-export class Navbar implements OnInit {
+export class Navbar implements OnInit, OnDestroy {
   mobileMenuOpen = false;
   currentUser: AuthResponse | null = null;
   cartCount = 0;
+  unreadNotifications = 0;
+
+  private unreadSub?: Subscription;
 
   constructor(
     private readonly authService: AuthService,
     private readonly cartService: CartService,
+    private readonly notificationService: NotificationService,
     private readonly router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadUser();
     this.loadCartCount();
+    this.startUnreadNotifications();
+  }
+
+  ngOnDestroy(): void {
+    this.unreadSub?.unsubscribe();
   }
 
   @HostListener('window:storage')
   onStorageChange(): void {
     this.loadUser();
     this.loadCartCount();
+    this.startUnreadNotifications();
   }
 
   toggleMobileMenu(): void {
@@ -51,11 +63,29 @@ export class Navbar implements OnInit {
     }
 
     this.cartService.getCartCount().subscribe({
-      next: (count) => {
+      next: (count: number) => {
         this.cartCount = count;
       },
       error: () => {
         this.cartCount = 0;
+      }
+    });
+  }
+
+  startUnreadNotifications(): void {
+    this.unreadSub?.unsubscribe();
+
+    if (!this.authService.isLoggedIn()) {
+      this.unreadNotifications = 0;
+      return;
+    }
+
+    this.unreadSub = this.notificationService.getUnreadCountLive().subscribe({
+      next: (count: number) => {
+        this.unreadNotifications = count;
+      },
+      error: () => {
+        this.unreadNotifications = 0;
       }
     });
   }
@@ -65,6 +95,7 @@ export class Navbar implements OnInit {
       next: () => {
         this.currentUser = null;
         this.cartCount = 0;
+        this.unreadNotifications = 0;
         this.mobileMenuOpen = false;
         this.router.navigateByUrl('/login');
       },
@@ -72,6 +103,7 @@ export class Navbar implements OnInit {
         this.authService.clearAuthData();
         this.currentUser = null;
         this.cartCount = 0;
+        this.unreadNotifications = 0;
         this.mobileMenuOpen = false;
         this.router.navigateByUrl('/login');
       }

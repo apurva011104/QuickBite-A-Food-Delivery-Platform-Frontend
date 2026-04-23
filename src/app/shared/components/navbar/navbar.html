@@ -1,5 +1,7 @@
 <header class="sticky top-0 z-50 border-b border-black/5 bg-white/90 backdrop-blur">
   <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    
+    <!-- LOGO -->
     <a routerLink="/" class="flex items-center gap-3" aria-label="QuickBite Home">
       <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--qb-primary)] text-white font-bold shadow-sm">
         Q
@@ -10,30 +12,23 @@
       </div>
     </a>
 
+    <!-- DESKTOP NAV -->
     <nav class="hidden items-center gap-8 md:flex">
-      <a
-        routerLink="/"
-        routerLinkActive="text-[var(--qb-primary)]"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
-      >
+      
+      <a routerLink="/" routerLinkActive="text-[var(--qb-primary)]" [routerLinkActiveOptions]="{ exact: true }"
+        class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]">
         Home
       </a>
 
-      <a
-        routerLink="/restaurants"
-        routerLinkActive="text-[var(--qb-primary)]"
-        class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
-      >
+      <a routerLink="/restaurants" routerLinkActive="text-[var(--qb-primary)]"
+        class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]">
         Restaurants
       </a>
 
+      <!-- CUSTOMER -->
       @if (currentUser?.role === 'CUSTOMER') {
-        <a
-          routerLink="/cart"
-          routerLinkActive="text-[var(--qb-primary)]"
-          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
-        >
+        <a routerLink="/cart" routerLinkActive="text-[var(--qb-primary)]"
+          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]">
           Cart
           @if (cartCount > 0) {
             <span class="ml-1 rounded-full bg-[var(--qb-primary)] px-2 py-0.5 text-xs text-white">
@@ -42,43 +37,54 @@
           }
         </a>
 
-        <a
-          routerLink="/orders"
-          routerLinkActive="text-[var(--qb-primary)]"
-          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
-        >
+        <a routerLink="/orders" routerLinkActive="text-[var(--qb-primary)]"
+          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]">
           Orders
         </a>
       }
 
+      <!-- OWNER -->
       @if (currentUser?.role === 'OWNER') {
-        <a
-          routerLink="/owner"
-          routerLinkActive="text-[var(--qb-primary)]"
-          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
-        >
+        <a routerLink="/owner" routerLinkActive="text-[var(--qb-primary)]"
+          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]">
           My Restaurants
         </a>
-        <a
-          routerLink="/owner/menu"
-          routerLinkActive="text-[var(--qb-primary)]"
-          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
-        >
+
+        <a routerLink="/owner/menu" routerLinkActive="text-[var(--qb-primary)]"
+          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]">
           Manage Menu
         </a>
       }
-    </nav>
-    
-    @if (currentUser?.role === 'ADMIN') {
-  <a
-    routerLink="/admin"
-    routerLinkActive="text-[var(--qb-primary)]"
-    class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]"
-  >
-    Admin Dashboard
-  </a>
-}
 
+      <!-- ADMIN -->
+      @if (currentUser?.role === 'ADMIN') {
+        <a routerLink="/admin" routerLinkActive="text-[var(--qb-primary)]"
+          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]">
+          Admin Dashboard
+        </a>
+
+        <!-- 🔥 ADMIN NOTIFICATIONS -->
+        <a routerLink="/admin/notifications" routerLinkActive="text-[var(--qb-primary)]"
+          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]">
+          Admin Alerts
+        </a>
+      }
+
+      <!-- USER NOTIFICATIONS -->
+      @if (currentUser && currentUser.role !== 'ADMIN') {
+        <a routerLink="/notifications" routerLinkActive="text-[var(--qb-primary)]"
+          class="font-medium text-[var(--qb-text)] transition hover:text-[var(--qb-primary)]">
+          Notifications
+          @if (unreadNotifications > 0) {
+            <span class="ml-1 rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
+              {{ unreadNotifications }}
+            </span>
+          }
+        </a>
+      }
+    </nav>
+
+    <!-- RIGHT SIDE -->
     <div class="hidden items-center gap-3 md:flex">
       @if (currentUser) {
         <div class="text-right">
@@ -86,53 +92,41 @@
           <p class="text-xs text-[var(--qb-muted)]">{{ currentUser.role }}</p>
         </div>
 
-        <button
-          type="button"
-          (click)="logout()"
-          class="rounded-xl bg-[var(--qb-text)] px-4 py-2 font-semibold text-white shadow-sm transition hover:opacity-90"
-        >
+        <button (click)="logout()"
+          class="rounded-xl bg-[var(--qb-text)] px-4 py-2 font-semibold text-white shadow-sm transition hover:opacity-90">
           Logout
         </button>
       } @else {
-        <a
-          routerLink="/login"
-          class="rounded-xl border border-[var(--qb-primary)] px-4 py-2 font-semibold text-[var(--qb-primary)] transition hover:bg-orange-50"
-        >
+        <a routerLink="/login"
+          class="rounded-xl border border-[var(--qb-primary)] px-4 py-2 font-semibold text-[var(--qb-primary)] hover:bg-orange-50">
           Login
         </a>
 
-        <a
-          routerLink="/signup"
-          class="rounded-xl bg-[var(--qb-primary)] px-4 py-2 font-semibold text-white shadow-sm transition hover:opacity-90"
-        >
+        <a routerLink="/signup"
+          class="rounded-xl bg-[var(--qb-primary)] px-4 py-2 font-semibold text-white shadow-sm hover:opacity-90">
           Sign Up
         </a>
       }
     </div>
 
-    <button
-      type="button"
-      (click)="toggleMobileMenu()"
-      class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 md:hidden"
-      aria-label="Toggle navigation menu"
-    >
+    <!-- MOBILE BUTTON -->
+    <button (click)="toggleMobileMenu()"
+      class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 md:hidden">
       ☰
     </button>
   </div>
 
+  <!-- MOBILE MENU -->
   @if (mobileMenuOpen) {
     <div class="border-t border-black/5 bg-white md:hidden">
       <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 lg:px-8">
-        <a routerLink="/" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
-          Home
-        </a>
 
-        <a routerLink="/restaurants" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
-          Restaurants
-        </a>
+        <a routerLink="/" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 hover:bg-orange-50">Home</a>
+        <a routerLink="/restaurants" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 hover:bg-orange-50">Restaurants</a>
 
+        <!-- CUSTOMER -->
         @if (currentUser?.role === 'CUSTOMER') {
-          <a routerLink="/cart" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
+          <a routerLink="/cart" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 hover:bg-orange-50">
             Cart
             @if (cartCount > 0) {
               <span class="ml-1 rounded-full bg-[var(--qb-primary)] px-2 py-0.5 text-xs text-white">
@@ -141,42 +135,62 @@
             }
           </a>
 
-          <a routerLink="/orders" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
+          <a routerLink="/orders" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 hover:bg-orange-50">
             Orders
           </a>
         }
 
+        <!-- OWNER -->
         @if (currentUser?.role === 'OWNER') {
-          <a routerLink="/owner" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
+          <a routerLink="/owner" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 hover:bg-orange-50">
             My restaurants
           </a>
-          <a routerLink="/owner/menu" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
+
+          <a routerLink="/owner/menu" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 hover:bg-orange-50">
             Manage Menu
           </a>
         }
 
+        <!-- ADMIN -->
+        @if (currentUser?.role === 'ADMIN') {
+          <a routerLink="/admin" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 hover:bg-orange-50">
+            Admin Dashboard
+          </a>
+
+          <a routerLink="/admin/notifications" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 hover:bg-orange-50">
+            Admin Alerts
+          </a>
+        }
+
+        <!-- USER NOTIFICATIONS -->
+        @if (currentUser && currentUser.role !== 'ADMIN') {
+          <a routerLink="/notifications" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 hover:bg-orange-50">
+            Notifications
+            @if (unreadNotifications > 0) {
+              <span class="ml-1 rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
+                {{ unreadNotifications }}
+              </span>
+            }
+          </a>
+        }
+
+        <!-- USER INFO -->
         @if (currentUser) {
           <div class="rounded-2xl bg-orange-50 px-3 py-3">
             <p class="text-sm font-semibold text-[var(--qb-text)]">{{ currentUser.name }}</p>
             <p class="text-xs text-[var(--qb-muted)]">{{ currentUser.role }}</p>
           </div>
 
-          <button
-            type="button"
-            (click)="logout()"
-            class="rounded-xl bg-[var(--qb-text)] px-3 py-2 font-semibold text-white"
-          >
+          <button (click)="logout()" class="rounded-xl bg-[var(--qb-text)] px-3 py-2 text-white">
             Logout
           </button>
         } @else {
-          <a routerLink="/login" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 font-medium hover:bg-orange-50">
-            Login
-          </a>
-
-          <a routerLink="/signup" (click)="closeMobileMenu()" class="rounded-xl bg-[var(--qb-primary)] px-3 py-2 font-semibold text-white">
+          <a routerLink="/login" (click)="closeMobileMenu()" class="rounded-xl px-3 py-2 hover:bg-orange-50">Login</a>
+          <a routerLink="/signup" (click)="closeMobileMenu()" class="rounded-xl bg-[var(--qb-primary)] px-3 py-2 text-white">
             Sign Up
           </a>
         }
+
       </div>
     </div>
   }

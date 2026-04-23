@@ -47,6 +47,17 @@
         </div>
 
         <div>
+          <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Special Instructions</label>
+          <textarea
+            [(ngModel)]="specialInstructions"
+            name="specialInstructions"
+            rows="3"
+            placeholder="Any special instructions?"
+            class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+          ></textarea>
+        </div>
+
+        <div>
           <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Payment Method</label>
           <select
             [(ngModel)]="paymentMode"
@@ -54,11 +65,26 @@
             class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
           >
             <option value="COD">Cash on Delivery</option>
-            <option value="UPI">UPI</option>
-            <option value="CARD">Card</option>
             <option value="WALLET">Wallet</option>
+            <option value="UPI" disabled>UPI (Coming soon)</option>
+            <option value="CARD" disabled>Card (Coming soon)</option>
           </select>
         </div>
+
+        <div class="rounded-2xl bg-orange-50 px-4 py-3 text-sm">
+          <p class="font-semibold text-[var(--qb-text)]">Wallet Balance</p>
+          @if (walletLoading) {
+            <p class="mt-1 text-[var(--qb-muted)]">Loading wallet balance...</p>
+          } @else {
+            <p class="mt-1 text-[var(--qb-muted)]">₹{{ walletBalance }}</p>
+          }
+        </div>
+
+        @if (paymentMode === 'WALLET' && !walletLoading && !walletSufficient) {
+          <p class="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+            Insufficient wallet balance for this order.
+          </p>
+        }
 
         @if (errorMessage) {
           <p class="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
@@ -104,9 +130,10 @@
       <button
         type="button"
         (click)="placeOrder()"
-        class="mt-6 w-full rounded-2xl bg-[var(--qb-primary)] px-4 py-3 font-semibold text-white transition hover:opacity-90"
+        [disabled]="submitting || (paymentMode === 'WALLET' && !walletSufficient)"
+        class="mt-6 w-full rounded-2xl bg-[var(--qb-primary)] px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
       >
-        Place Order
+        {{ submitting ? 'Placing Order...' : 'Place Order' }}
       </button>
     </div>
   </div>

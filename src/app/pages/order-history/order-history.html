@@ -1,27 +1,50 @@
 <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-  <div class="mb-8">
-    <h1 class="text-3xl font-extrabold text-[var(--qb-text)]">Order History</h1>
-    <p class="mt-2 text-[var(--qb-muted)]">
-      View all your previous orders and track current ones.
-    </p>
+  <div class="mb-8 flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-extrabold text-[var(--qb-text)]">Order History</h1>
+      <p class="mt-2 text-[var(--qb-muted)]">
+        View all your previous orders and track current ones.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      (click)="loadOrders()"
+      class="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-[var(--qb-text)] transition hover:bg-black/5"
+    >
+      Refresh
+    </button>
   </div>
 
-  @if (orders.length) {
+  @if (errorMessage) {
+    <div class="mb-6 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (reordering) {
+    <div class="mb-6 rounded-2xl bg-orange-50 px-4 py-3 text-sm font-medium text-[var(--qb-primary)]">
+      Adding previous order items to your cart...
+    </div>
+  }
+
+  @if (loading) {
+    <div class="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
+      Loading orders...
+    </div>
+  } @else if (orders.length) {
     <div class="space-y-6">
-      @for (order of orders; track order.id) {
+      @for (order of orders; track order.orderId) {
         <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5">
           <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p class="text-sm text-[var(--qb-muted)]">Order ID</p>
-              <h2 class="mt-1 text-xl font-bold text-[var(--qb-text)]">#{{ order.id }}</h2>
-
               <p class="mt-4 text-sm text-[var(--qb-muted)]">Placed At</p>
               <p class="mt-1 font-medium text-[var(--qb-text)]">
-                {{ order.placedAt | date: 'medium' }}
+                {{ order.orderDate | date: 'medium' }}
               </p>
 
               <div class="mt-4 space-y-2">
-                @for (item of order.items; track item.name) {
+                @for (item of order.items; track item.orderItemId) {
                   <p class="text-sm text-[var(--qb-muted)]">
                     {{ item.name }} × {{ item.quantity }}
                   </p>
@@ -32,20 +55,44 @@
             <div class="lg:text-right">
               <span
                 class="inline-flex rounded-full px-3 py-1 text-sm font-semibold"
-                [class]="getStatusClasses(order.status)"
+                [class]="getStatusClasses(order.orderStatus)"
               >
-                {{ order.status }}
+                {{ order.orderStatus }}
               </span>
 
-              <p class="mt-4 text-sm text-[var(--qb-muted)]">Total</p>
-              <p class="mt-1 text-lg font-bold text-[var(--qb-text)]">₹{{ order.totalAmount }}</p>
+              <p class="mt-4 text-sm text-[var(--qb-muted)]">Final Amount</p>
+              <p class="mt-1 text-lg font-bold text-[var(--qb-text)]">₹{{ order.finalAmount }}</p>
 
-              <a
-                [routerLink]="['/orders', order.id]"
-                class="mt-5 inline-block rounded-2xl bg-[var(--qb-primary)] px-5 py-3 font-semibold text-white transition hover:opacity-90"
-              >
-                Track Order
-              </a>
+              <p class="mt-2 text-sm text-[var(--qb-muted)]">Payment Mode</p>
+              <p class="mt-1 font-medium text-[var(--qb-text)]">{{ order.paymentMode }}</p>
+
+              <div class="mt-5 flex flex-wrap gap-2 lg:justify-end">
+                <a
+                  [routerLink]="['/orders', order.orderId]"
+                  class="rounded-2xl bg-[var(--qb-primary)] px-4 py-2 font-semibold text-white transition hover:opacity-90"
+                >
+                  Track
+                </a>
+
+                @if (canCancel(order.orderStatus)) {
+                  <button
+                    type="button"
+                    (click)="cancel(order.orderId)"
+                    class="rounded-2xl border border-red-200 px-4 py-2 font-semibold text-red-600"
+                  >
+                    Cancel
+                  </button>
+                }
+
+                <button
+                  type="button"
+                  (click)="reorderToCart(order)"
+                  [disabled]="reordering"
+                  class="rounded-2xl border border-black/10 px-4 py-2 font-semibold text-[var(--qb-text)] disabled:opacity-50"
+                >
+                  Reorder
+                </button>
+              </div>
             </div>
           </div>
         </div>

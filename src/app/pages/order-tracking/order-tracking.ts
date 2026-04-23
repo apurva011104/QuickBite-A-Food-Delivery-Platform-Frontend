@@ -1,7 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Order } from '../../core/models/order.model';
-import { OrderService } from '../../core/services/order.service';
+import { OrderResponse, OrderService } from '../../core/services/order.service';
 
 @Component({
   selector: 'app-order-tracking',
@@ -10,18 +9,30 @@ import { OrderService } from '../../core/services/order.service';
   templateUrl: './order-tracking.html'
 })
 export class OrderTracking implements OnInit {
-  order: Order | undefined;
+  order: OrderResponse | undefined;
+  errorMessage = '';
 
   readonly statuses = ['PLACED', 'CONFIRMED', 'PREPARING', 'PICKED_UP', 'DELIVERED'];
 
   constructor(
     private readonly route: ActivatedRoute,
-    private readonly orderService: OrderService
+    private readonly orderService: OrderService,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     const orderId = Number(this.route.snapshot.paramMap.get('id'));
-    this.order = this.orderService.getOrderById(orderId);
+
+    this.orderService.getOrderById(orderId).subscribe({
+      next: (order) => {
+        this.order = order;
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        this.errorMessage = err?.error?.message || 'Order not found.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   isStepCompleted(step: string): boolean {
@@ -29,7 +40,7 @@ export class OrderTracking implements OnInit {
       return false;
     }
 
-    const currentIndex = this.statuses.indexOf(this.order.status);
+    const currentIndex = this.statuses.indexOf(this.order.orderStatus);
     const stepIndex = this.statuses.indexOf(step);
 
     return stepIndex <= currentIndex;

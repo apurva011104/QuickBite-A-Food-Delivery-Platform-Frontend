@@ -16,6 +16,9 @@ import { OwnerDashboard } from './pages/owner-dashboard/owner-dashboard';
 import { OwnerMenu } from './pages/owner-menu/owner-menu';
 import { AdminDashboard } from './pages/admin-dashboard/admin-dashboard';
 import { adminGuard } from './core/guards/admin.guard';
+import { Notifications } from './pages/notifications/notifications';
+import { AdminNotifications } from './pages/admin-notifications/admin-notifications';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -35,6 +38,8 @@ export const routes: Routes = [
       { path: 'owner', component: OwnerDashboard, canActivate: [ownerGuard] },
       { path: 'owner/menu', component: OwnerMenu, canActivate: [ownerGuard] },
       { path: 'admin', component: AdminDashboard, canActivate: [adminGuard] },
+      { path: 'notifications', component: Notifications, canActivate: [authGuard] },
+{ path: 'admin/notifications', component: AdminNotifications, canActivate: [adminGuard] },
     ]
   },
   { path: '**', redirectTo: '' }

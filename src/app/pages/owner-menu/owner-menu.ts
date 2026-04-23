@@ -40,10 +40,13 @@ export class OwnerMenu implements OnInit {
     price: 0,
     discountedPrice: 0,
     imageUrl: '',
-    isVeg: true,
+    veg: true,
     calories: 0,
     tags: []
   };
+
+  editingCategoryId: number | null = null;
+  editingItemId: number | null = null;
 
   tagsInput = '';
   errorMessage = '';
@@ -98,8 +101,16 @@ export class OwnerMenu implements OnInit {
 
   selectRestaurant(restaurantId: number): void {
     this.selectedRestaurantId = restaurantId;
+    this.resetCategoryForm();
+    this.resetItemForm();
     this.categoryForm.restaurantId = restaurantId;
     this.itemForm.restaurantId = restaurantId;
+    this.loadCategories();
+    this.loadItems();
+  }
+
+  refreshCurrentRestaurantData(): void {
+    if (!this.selectedRestaurantId) return;
     this.loadCategories();
     this.loadItems();
   }
@@ -203,21 +214,21 @@ export class OwnerMenu implements OnInit {
 
     this.categoryForm.restaurantId = this.selectedRestaurantId;
 
-    this.menuService.addCategory(this.categoryForm).subscribe({
+    const request$ = this.editingCategoryId
+      ? this.menuService.updateCategory(this.editingCategoryId, this.categoryForm)
+      : this.menuService.addCategory(this.categoryForm);
+
+    request$.subscribe({
       next: () => {
-        this.successMessage = 'Category added successfully.';
-        this.categoryForm = {
-          restaurantId: this.selectedRestaurantId!,
-          name: '',
-          description: '',
-          imageUrl: '',
-          displayOrder: 1
-        };
-        this.loadCategories();
+        this.successMessage = this.editingCategoryId
+          ? 'Category updated successfully.'
+          : 'Category added successfully.';
+        this.resetCategoryForm();
+        this.refreshCurrentRestaurantData();
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.errorMessage = err?.error?.message || 'Unable to add category.';
+        this.errorMessage = err?.error?.message || 'Unable to save category.';
         this.cdr.detectChanges();
       }
     });
@@ -242,30 +253,139 @@ export class OwnerMenu implements OnInit {
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0);
 
-    this.menuService.addMenuItem(this.itemForm).subscribe({
+    const request$ = this.editingItemId
+      ? this.menuService.updateMenuItem(this.editingItemId, this.itemForm)
+      : this.menuService.addMenuItem(this.itemForm);
+
+    request$.subscribe({
       next: () => {
-        this.successMessage = 'Menu item added successfully.';
-        this.itemForm = {
-          restaurantId: this.selectedRestaurantId!,
-          categoryId: this.categories.length ? this.categories[0].categoryId : 0,
-          name: '',
-          description: '',
-          price: 0,
-          discountedPrice: 0,
-          imageUrl: '',
-          isVeg: true,
-          calories: 0,
-          tags: []
-        };
-        this.tagsInput = '';
-        this.loadItems();
+        this.successMessage = this.editingItemId
+          ? 'Menu item updated successfully.'
+          : 'Menu item added successfully.';
+        this.resetItemForm();
+        this.refreshCurrentRestaurantData();
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.errorMessage = err?.error?.message || 'Unable to add menu item.';
+        this.errorMessage = err?.error?.message || 'Unable to save menu item.';
         this.cdr.detectChanges();
       }
     });
+  }
+
+  editCategory(category: MenuCategory): void {
+    this.editingCategoryId = category.categoryId;
+    this.categoryForm = {
+      restaurantId: category.restaurantId,
+      name: category.name,
+      description: category.description || '',
+      imageUrl: category.imageUrl || '',
+      displayOrder: category.displayOrder
+    };
+    this.cdr.detectChanges();
+  }
+
+  deleteCategory(categoryId: number): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.menuService.deleteCategory(categoryId).subscribe({
+      next: () => {
+        this.successMessage = 'Category deleted successfully.';
+        if (this.editingCategoryId === categoryId) {
+          this.resetCategoryForm();
+        }
+        this.refreshCurrentRestaurantData();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.message || 'Unable to delete category.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  editItem(item: MenuItem): void {
+    this.editingItemId = item.itemId;
+    this.itemForm = {
+      restaurantId: item.restaurantId,
+      categoryId: item.categoryId,
+      name: item.name,
+      description: item.description || '',
+      price: item.price,
+      discountedPrice: item.discountedPrice,
+      imageUrl: item.imageUrl || '',
+      veg: item.veg,
+      calories: item.calories,
+      tags: item.tags || []
+    };
+    this.tagsInput = (item.tags || []).join(', ');
+    this.cdr.detectChanges();
+  }
+
+  deleteItem(itemId: number): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.menuService.deleteMenuItem(itemId).subscribe({
+      next: () => {
+        this.successMessage = 'Menu item deleted successfully.';
+        if (this.editingItemId === itemId) {
+          this.resetItemForm();
+        }
+        this.refreshCurrentRestaurantData();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.message || 'Unable to delete menu item.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  toggleItemAvailability(item: MenuItem): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.menuService.toggleAvailability(item.itemId, !item.available).subscribe({
+      next: () => {
+        this.successMessage = 'Item availability updated successfully.';
+        this.refreshCurrentRestaurantData();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.message || 'Unable to update item availability.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  resetCategoryForm(): void {
+    this.editingCategoryId = null;
+    this.categoryForm = {
+      restaurantId: this.selectedRestaurantId || 0,
+      name: '',
+      description: '',
+      imageUrl: '',
+      displayOrder: 1
+    };
+  }
+
+  resetItemForm(): void {
+    this.editingItemId = null;
+    this.itemForm = {
+      restaurantId: this.selectedRestaurantId || 0,
+      categoryId: this.categories.length ? this.categories[0].categoryId : 0,
+      name: '',
+      description: '',
+      price: 0,
+      discountedPrice: 0,
+      imageUrl: '',
+      veg: true,
+      calories: 0,
+      tags: []
+    };
+    this.tagsInput = '';
   }
 
   get approvedRestaurants(): Restaurant[] {

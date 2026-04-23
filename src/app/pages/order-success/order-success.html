@@ -15,28 +15,31 @@
 
       <div class="mt-8 rounded-2xl bg-orange-50 p-6 text-left">
         <p class="text-sm text-[var(--qb-muted)]">Order ID</p>
-        <p class="mt-1 text-lg font-bold text-[var(--qb-text)]">#{{ order.id }}</p>
+        <p class="mt-1 text-lg font-bold text-[var(--qb-text)]">#{{ order.orderId }}</p>
 
         <p class="mt-4 text-sm text-[var(--qb-muted)]">Status</p>
-        <p class="mt-1 font-semibold text-[var(--qb-primary)]">{{ order.status }}</p>
+        <p class="mt-1 font-semibold text-[var(--qb-primary)]">{{ order.orderStatus }}</p>
 
-        <p class="mt-4 text-sm text-[var(--qb-muted)]">Total Paid</p>
-        <p class="mt-1 font-semibold text-[var(--qb-text)]">₹{{ order.totalAmount }}</p>
+        <p class="mt-4 text-sm text-[var(--qb-muted)]">Final Amount</p>
+        <p class="mt-1 font-semibold text-[var(--qb-text)]">₹{{ order.finalAmount }}</p>
+
+        <p class="mt-4 text-sm text-[var(--qb-muted)]">Payment Mode</p>
+        <p class="mt-1 font-semibold text-[var(--qb-text)]">{{ order.paymentMode }}</p>
       </div>
 
       <div class="mt-8 flex flex-wrap justify-center gap-4">
         <a
-          routerLink="/restaurants"
+          routerLink="/orders"
           class="rounded-2xl border border-black/10 bg-white px-6 py-3 font-semibold text-[var(--qb-text)] transition hover:bg-black/5"
         >
-          Order More
+          View Orders
         </a>
 
         <a
-          routerLink="/"
+          routerLink="/restaurants"
           class="rounded-2xl bg-[var(--qb-primary)] px-6 py-3 font-semibold text-white transition hover:opacity-90"
         >
-          Back to Home
+          Order More
         </a>
       </div>
     </div>
@@ -44,7 +47,7 @@
 } @else {
   <section class="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
     <div class="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
-      <h1 class="text-2xl font-bold text-[var(--qb-text)]">Order not found</h1>
+      <h1 class="text-2xl font-bold text-[var(--qb-text)]">{{ errorMessage || 'Order not found' }}</h1>
     </div>
   </section>
 }

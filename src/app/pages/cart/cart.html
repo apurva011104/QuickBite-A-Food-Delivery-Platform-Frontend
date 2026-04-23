@@ -7,18 +7,38 @@
       </p>
     </div>
 
-    @if (items.length) {
+    <div class="flex gap-2">
       <button
         type="button"
-        (click)="clearCart()"
-        class="rounded-2xl border border-red-200 px-4 py-2 font-semibold text-red-600 transition hover:bg-red-50"
+        (click)="loadCart()"
+        class="rounded-2xl border border-black/10 px-4 py-2 font-semibold text-[var(--qb-text)] transition hover:bg-black/5"
       >
-        Clear Cart
+        Refresh
       </button>
-    }
+
+      @if (items.length) {
+        <button
+          type="button"
+          (click)="clearCart()"
+          class="rounded-2xl border border-red-200 px-4 py-2 font-semibold text-red-600 transition hover:bg-red-50"
+        >
+          Clear Cart
+        </button>
+      }
+    </div>
   </div>
 
-  @if (items.length) {
+  @if (errorMessage) {
+    <div class="mb-6 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (loading) {
+    <div class="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
+      Loading cart...
+    </div>
+  } @else if (items.length) {
     <div class="grid gap-8 lg:grid-cols-[1.6fr_1fr]">
       <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5">
         <div class="space-y-5">
@@ -66,8 +86,10 @@
           </div>
         </div>
 
-        <a routerLink="/checkout"
-            class="mt-6 block w-full rounded-2xl bg-[var(--qb-primary)] px-4 py-3 text-center font-semibold text-white transition hover:opacity-90">
+        <a
+          routerLink="/checkout"
+          class="mt-6 block w-full rounded-2xl bg-[var(--qb-primary)] px-4 py-3 text-center font-semibold text-white transition hover:opacity-90"
+        >
           Proceed to Checkout
         </a>
       </div>

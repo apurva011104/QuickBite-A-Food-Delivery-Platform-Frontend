@@ -1,55 +1,85 @@
 import { Injectable } from '@angular/core';
-import { Order } from '../models/order.model';
-import { CartItemResponse } from '../models/cart.model';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+export type PaymentMode = 'COD' | 'WALLET';
+export type OrderStatus =
+  | 'PLACED'
+  | 'CONFIRMED'
+  | 'PREPARING'
+  | 'PICKED_UP'
+  | 'DELIVERED'
+  | 'CANCELLED';
+
+export interface OrderItemRequest {
+  menuItemId: number;
+  name: string;
+  price: number;
+  quantity: number;
+  customization?: string;
+}
+
+export interface OrderRequest {
+  restaurantId: number;
+  discount?: number;
+  paymentMode: PaymentMode;
+  deliveryAddress: string;
+  specialInstructions?: string;
+  items: OrderItemRequest[];
+}
+
+export interface OrderItemResponse {
+  orderItemId: number;
+  menuItemId: number;
+  name: string;
+  price: number;
+  quantity: number;
+  customization?: string;
+}
+
+export interface OrderResponse {
+  orderId: number;
+  customerId: number;
+  restaurantId: number;
+  deliveryAgentId: number | null;
+  totalAmount: number;
+  discount: number;
+  finalAmount: number;
+  paymentMode: PaymentMode | 'CARD' | 'UPI';
+  orderStatus: OrderStatus;
+  orderDate: string;
+  deliveryAddress: string;
+  estimatedDelivery: string;
+  specialInstructions?: string;
+  items: OrderItemResponse[];
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class OrderService {
-  private readonly ordersStorageKey = 'quickbite_orders';
+  private readonly baseUrl = `${environment.apiBaseUrl}/orders`;
 
-  getOrders(): Order[] {
-    const raw = localStorage.getItem(this.ordersStorageKey);
-    return raw ? (JSON.parse(raw) as Order[]) : [];
+  constructor(private readonly http: HttpClient) {}
+
+  placeOrder(payload: OrderRequest): Observable<OrderResponse> {
+    return this.http.post<OrderResponse>(this.baseUrl, payload);
   }
 
-  saveOrders(orders: Order[]): void {
-    localStorage.setItem(this.ordersStorageKey, JSON.stringify(orders));
+  getMyOrders(): Observable<OrderResponse[]> {
+    return this.http.get<OrderResponse[]>(`${this.baseUrl}/customer`);
   }
 
-  placeOrder(orderData: {
-    customerId: number;
-    restaurantId: number;
-    items: CartItemResponse[];
-    totalAmount: number;
-  }): Order {
-    const orders = this.getOrders();
-
-    const newOrder: Order = {
-      id: Date.now(),
-      customerId: orderData.customerId,
-      restaurantId: orderData.restaurantId,
-      items: orderData.items.map((item) => ({
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price
-      })),
-      totalAmount: orderData.totalAmount,
-      status: 'PLACED',
-      placedAt: new Date().toISOString()
-    };
-
-    orders.unshift(newOrder);
-    this.saveOrders(orders);
-
-    return newOrder;
+  getOrderById(orderId: number): Observable<OrderResponse> {
+    return this.http.get<OrderResponse>(`${this.baseUrl}/${orderId}`);
   }
 
-  getOrderById(orderId: number): Order | undefined {
-    return this.getOrders().find((order) => order.id === orderId);
+  cancelOrder(orderId: number): Observable<OrderResponse> {
+    return this.http.put<OrderResponse>(`${this.baseUrl}/${orderId}/cancel`, {});
   }
 
-  getOrdersByCustomerId(customerId: number): Order[] {
-    return this.getOrders().filter((order) => order.customerId === customerId);
+  reorder(orderId: number): Observable<OrderResponse> {
+    return this.http.post<OrderResponse>(`${this.baseUrl}/${orderId}/reorder`, {});
   }
 }

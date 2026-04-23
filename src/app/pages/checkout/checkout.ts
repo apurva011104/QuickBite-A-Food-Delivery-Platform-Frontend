@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CartItemResponse } from '../../core/models/cart.model';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
-import { OrderService } from '../../core/services/order.service';
+import { OrderService, PaymentMode, OrderResponse } from '../../core/services/order.service';
+import { PaymentService } from '../../core/services/payment.service';
 
 @Component({
   selector: 'app-checkout',
@@ -19,29 +20,56 @@ export class Checkout implements OnInit {
   fullAddress = '';
   city = '';
   pincode = '';
-  paymentMode: 'COD' | 'UPI' | 'CARD' | 'WALLET' = 'COD';
+  specialInstructions = '';
+  paymentMode: PaymentMode = 'COD';
+
+  walletBalance = 0;
+  walletLoading = true;
 
   errorMessage = '';
+  submitting = false;
 
   constructor(
     private readonly cartService: CartService,
     private readonly authService: AuthService,
     private readonly orderService: OrderService,
-    private readonly router: Router
+    private readonly paymentService: PaymentService,
+    private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    this.loadCheckoutData();
+  }
+
+  loadCheckoutData(): void {
     this.cartService.getMyCart().subscribe({
       next: (cart) => {
-        this.cartItems = cart.cartItems;
+        this.cartItems = [...cart.cartItems];
         this.restaurantId = cart.restaurantId;
 
         if (!this.cartItems.length) {
           this.router.navigateByUrl('/cart');
+          return;
         }
+
+        this.cdr.detectChanges();
       },
       error: () => {
         this.router.navigateByUrl('/cart');
+      }
+    });
+
+    this.paymentService.getWalletBalance().subscribe({
+      next: (balance) => {
+        this.walletBalance = balance;
+        this.walletLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.walletBalance = 0;
+        this.walletLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -56,6 +84,10 @@ export class Checkout implements OnInit {
 
   get total(): number {
     return this.subtotal + this.deliveryFee;
+  }
+
+  get walletSufficient(): boolean {
+    return this.walletBalance >= this.total;
   }
 
   placeOrder(): void {
@@ -73,19 +105,50 @@ export class Checkout implements OnInit {
       return;
     }
 
-    const order = this.orderService.placeOrder({
-      customerId: Date.now(),
-      restaurantId: this.restaurantId ?? 0,
-      items: this.cartItems,
-      totalAmount: this.total
-    });
+    if (!this.restaurantId || !this.cartItems.length) {
+      this.errorMessage = 'Cart is empty.';
+      return;
+    }
 
-    this.cartService.clearCart().subscribe({
-      next: () => {
-        this.router.navigateByUrl(`/order-success/${order.id}`);
+    if (this.paymentMode === 'WALLET' && !this.walletSufficient) {
+      this.errorMessage = 'Insufficient wallet balance.';
+      return;
+    }
+
+    this.submitting = true;
+
+    const payload = {
+      restaurantId: this.restaurantId,
+      discount: 0,
+      paymentMode: this.paymentMode,
+      deliveryAddress: `${this.fullAddress}, ${this.city} - ${this.pincode}`,
+      specialInstructions: this.specialInstructions.trim() || undefined,
+      items: this.cartItems.map((item) => ({
+        menuItemId: item.menuItemId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        customization: item.customization || undefined
+      }))
+    };
+
+    this.orderService.placeOrder(payload).subscribe({
+      next: (order: OrderResponse) => {
+        this.cartService.clearCart().subscribe({
+          next: () => {
+            this.submitting = false;
+            this.router.navigateByUrl(`/order-success/${order.orderId}`);
+          },
+          error: () => {
+            this.submitting = false;
+            this.router.navigateByUrl(`/order-success/${order.orderId}`);
+          }
+        });
       },
-      error: () => {
-        this.router.navigateByUrl(`/order-success/${order.id}`);
+      error: (err: any) => {
+        this.submitting = false;
+        this.errorMessage = err?.error?.message || 'Unable to place order.';
+        this.cdr.detectChanges();
       }
     });
   }

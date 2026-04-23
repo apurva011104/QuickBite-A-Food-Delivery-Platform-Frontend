@@ -13,11 +13,11 @@
 } @else if (restaurant) {
   <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
     <div class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-black/5">
-  <img
-    [src]="restaurantImage"
-    [alt]="restaurant?.name || 'Restaurant image'"
-    class="h-72 w-full object-cover"
-  />
+      <img
+        [src]="restaurantImage"
+        [alt]="restaurant?.name || 'Restaurant image'"
+        class="h-72 w-full object-cover"
+      />
 
       <div class="p-6 lg:p-8">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -61,9 +61,50 @@
         </p>
       }
 
-      @if (menuItems.length) {
+      <div class="mt-6 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5">
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <input
+            [(ngModel)]="searchText"
+            name="searchText"
+            type="text"
+            placeholder="Search item"
+            class="rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+          />
+
+          <select
+            [(ngModel)]="foodType"
+            name="foodType"
+            class="rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+          >
+            <option value="ALL">All</option>
+            <option value="VEG">Veg</option>
+            <option value="NON_VEG">Non-Veg</option>
+          </select>
+
+          <select
+            [(ngModel)]="selectedCategoryId"
+            name="selectedCategoryId"
+            class="rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+          >
+            <option value="ALL">All Categories</option>
+            @for (category of fullMenu; track category.categoryId) {
+              <option [ngValue]="category.categoryId">{{ category.name }}</option>
+            }
+          </select>
+
+          <input
+            [(ngModel)]="maxPrice"
+            name="maxPrice"
+            type="number"
+            placeholder="Max price"
+            class="rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+          />
+        </div>
+      </div>
+
+      @if (filteredItems.length) {
         <div class="mt-6 grid gap-6 md:grid-cols-4">
-          @for (item of menuItems; track item.itemId) {
+          @for (item of filteredItems; track item.itemId) {
             <div class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-black/5">
               <div class="h-52 bg-gradient-to-r from-orange-100 to-yellow-100">
                 @if (item.imageUrl) {
@@ -113,7 +154,7 @@
         </div>
       } @else {
         <div class="mt-6 rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
-          <p class="text-[var(--qb-muted)]">No menu items available for this restaurant yet.</p>
+          <p class="text-[var(--qb-muted)]">No menu items match the selected filters.</p>
         </div>
       }
     </div>

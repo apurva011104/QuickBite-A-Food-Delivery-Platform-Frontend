@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { LoginType } from '../../core/models/auth.model';
+import { LoginRequest, LoginType } from '../../core/models/auth.model';
 
 @Component({
   selector: 'app-login',
@@ -11,9 +11,14 @@ import { LoginType } from '../../core/models/auth.model';
   templateUrl: './login.html'
 })
 export class Login {
-  identifier = '';
-  password = '';
+  form: LoginRequest = {
+    identifier: '',
+    password: '',
+    loginType: 'EMAIL'
+  };
+
   errorMessage = '';
+  submitting = false;
 
   constructor(
     private readonly authService: AuthService,
@@ -23,42 +28,30 @@ export class Login {
   onLogin(): void {
     this.errorMessage = '';
 
-    const trimmedIdentifier = this.identifier.trim();
-    const loginType: LoginType = trimmedIdentifier.includes('@') ? 'EMAIL' : 'PHONE';
+    if (!this.form.identifier.trim() || !this.form.password.trim()) {
+      this.errorMessage = 'Please fill in all required fields.';
+      return;
+    }
 
-    this.authService.login({
-      identifier: trimmedIdentifier,
-      password: this.password.trim(),
-      loginType
-    }).subscribe({
-      next: (user) => {
-        const redirectRoute = this.authService.getRedirectRouteByRole(user.role);
-        this.router.navigateByUrl(redirectRoute);
+    this.submitting = true;
+
+    this.authService.login(this.form).subscribe({
+      next: (response) => {
+        this.submitting = false;
+        this.router.navigateByUrl(this.authService.getRedirectRouteByRole(response.role));
       },
-      error: () => {
-        this.errorMessage = 'Invalid email/phone or password.';
+      error: (err: any) => {
+        this.submitting = false;
+        this.errorMessage = err?.error?.message || 'Invalid credentials.';
       }
     });
   }
 
-  fillDemoCredentials(role: 'CUSTOMER' | 'OWNER' | 'AGENT' | 'ADMIN'): void {
-    switch (role) {
-      case 'CUSTOMER':
-        this.identifier = 'customer@quickbite.com';
-        this.password = '123456';
-        break;
-      case 'OWNER':
-        this.identifier = 'owner@quickbite.com';
-        this.password = '123456';
-        break;
-      case 'AGENT':
-        this.identifier = 'agent@quickbite.com';
-        this.password = '123456';
-        break;
-      case 'ADMIN':
-        this.identifier = 'admin@quickbite.com';
-        this.password = '123456';
-        break;
-    }
+  loginWithGoogle(): void {
+    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+  }
+
+  setLoginType(type: LoginType): void {
+    this.form.loginType = type;
   }
 }

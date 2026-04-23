@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { UserRole } from '../../core/models/auth.model';
+import { RegisterRequest, UserRole } from '../../core/models/auth.model';
 
 @Component({
   selector: 'app-signup',
@@ -11,16 +11,16 @@ import { UserRole } from '../../core/models/auth.model';
   templateUrl: './signup.html'
 })
 export class Signup {
-  firstName = '';
-  lastName = '';
-  email = '';
-  phone = '';
-  password = '';
-  confirmPassword = '';
-  role: UserRole = 'CUSTOMER';
+  form: RegisterRequest = {
+    name: '',
+    email: '',
+    phoneNumber: '',
+    password: '',
+    role: 'CUSTOMER'
+  };
 
   errorMessage = '';
-  successMessage = '';
+  submitting = false;
 
   constructor(
     private readonly authService: AuthService,
@@ -29,39 +29,31 @@ export class Signup {
 
   onSignup(): void {
     this.errorMessage = '';
-    this.successMessage = '';
 
-    if (
-      !this.firstName.trim() ||
-      !this.lastName.trim() ||
-      !this.email.trim() ||
-      !this.phone.trim() ||
-      !this.password.trim() ||
-      !this.confirmPassword.trim()
-    ) {
-      this.errorMessage = 'Please fill in all fields.';
+    if (!this.form.name.trim() || !this.form.email.trim() || !this.form.password?.trim()) {
+      this.errorMessage = 'Please fill in all required fields.';
       return;
     }
 
-    if (this.password !== this.confirmPassword) {
-      this.errorMessage = 'Passwords do not match.';
-      return;
-    }
+    this.submitting = true;
 
-    this.authService.signup({
-      name: `${this.firstName.trim()} ${this.lastName.trim()}`,
-      email: this.email.trim(),
-      phoneNumber: this.phone.trim(),
-      password: this.password,
-      role: this.role
-    }).subscribe({
-      next: () => {
-        this.successMessage = 'Account created successfully.';
-        setTimeout(() => this.router.navigateByUrl('/login'), 1200);
+    this.authService.signup(this.form).subscribe({
+      next: (response) => {
+        this.submitting = false;
+        this.router.navigateByUrl(this.authService.getRedirectRouteByRole(response.role));
       },
-      error: (err) => {
-        this.errorMessage = err?.error?.message || 'Signup failed.';
+      error: (err: any) => {
+        this.submitting = false;
+        this.errorMessage = err?.error?.message || 'Unable to create account.';
       }
     });
+  }
+
+  loginWithGoogle(): void {
+    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+  }
+
+  setRole(role: UserRole): void {
+    this.form.role = role;
   }
 }

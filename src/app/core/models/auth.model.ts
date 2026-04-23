@@ -1,5 +1,6 @@
 export type UserRole = 'CUSTOMER' | 'OWNER' | 'AGENT' | 'ADMIN';
 export type LoginType = 'EMAIL' | 'PHONE';
+export type AuthProvider = 'GOOGLE' | 'LOCAL';
 
 export interface LoginRequest {
   identifier: string;
@@ -30,6 +31,11 @@ export interface UserProfileResponse {
   email: string;
   phoneNumber?: string;
   role: UserRole;
-  authProvider: string;
+  authProvider: AuthProvider;
   active: boolean;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }

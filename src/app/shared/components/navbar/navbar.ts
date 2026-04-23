@@ -21,7 +21,7 @@ export class Navbar implements OnInit, OnDestroy {
   private unreadSub?: Subscription;
 
   constructor(
-    private readonly authService: AuthService,
+    public readonly authService: AuthService,
     private readonly cartService: CartService,
     private readonly notificationService: NotificationService,
     private readonly router: Router
@@ -75,7 +75,7 @@ export class Navbar implements OnInit, OnDestroy {
   startUnreadNotifications(): void {
     this.unreadSub?.unsubscribe();
 
-    if (!this.authService.isLoggedIn()) {
+    if (!this.authService.isLoggedIn() || this.authService.isAdmin()) {
       this.unreadNotifications = 0;
       return;
     }

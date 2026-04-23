@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   AuthResponse,
+  ChangePasswordRequest,
   LoginRequest,
   RegisterRequest,
   UserProfileResponse,
@@ -38,8 +39,32 @@ export class AuthService {
     );
   }
 
+  validateToken(): Observable<boolean> {
+    return this.http.post<boolean>(`${this.baseUrl}/validate`, {});
+  }
+
+  refreshToken(): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}/refresh`, {}).pipe(
+      tap((response) => this.storeAuthData(response))
+    );
+  }
+
   getProfile(): Observable<UserProfileResponse> {
     return this.http.get<UserProfileResponse>(`${this.baseUrl}/profile`);
+  }
+
+  updateProfile(payload: RegisterRequest): Observable<UserProfileResponse> {
+    return this.http.put<UserProfileResponse>(`${this.baseUrl}/profile`, payload);
+  }
+
+  changePassword(payload: ChangePasswordRequest): Observable<string> {
+    return this.http.put(`${this.baseUrl}/password`, payload, { responseType: 'text' });
+  }
+
+  deactivateAccount(): Observable<string> {
+    return this.http.delete(`${this.baseUrl}/deactivate`, { responseType: 'text' }).pipe(
+      tap(() => this.clearAuthData())
+    );
   }
 
   getLoggedInUser(): AuthResponse | null {
@@ -60,7 +85,7 @@ export class AuthService {
       case 'CUSTOMER':
         return '/';
       case 'OWNER':
-        return '/restaurants';
+        return '/owner';
       case 'AGENT':
         return '/';
       case 'ADMIN':

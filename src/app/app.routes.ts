@@ -19,6 +19,8 @@ import { adminGuard } from './core/guards/admin.guard';
 import { Notifications } from './pages/notifications/notifications';
 import { AdminNotifications } from './pages/admin-notifications/admin-notifications';
 import { authGuard } from './core/guards/auth.guard';
+import { OAuthSuccess } from './pages/oauth-success/oauth-success';
+import { Profile } from './pages/profile/profile';
 
 export const routes: Routes = [
   {
@@ -39,7 +41,9 @@ export const routes: Routes = [
       { path: 'owner/menu', component: OwnerMenu, canActivate: [ownerGuard] },
       { path: 'admin', component: AdminDashboard, canActivate: [adminGuard] },
       { path: 'notifications', component: Notifications, canActivate: [authGuard] },
-{ path: 'admin/notifications', component: AdminNotifications, canActivate: [adminGuard] },
+      { path: 'admin/notifications', component: AdminNotifications, canActivate: [adminGuard] },
+      { path: 'oauth-success', component: OAuthSuccess },
+      { path: 'profile', component: Profile, canActivate: [authGuard] }
     ]
   },
   { path: '**', redirectTo: '' }

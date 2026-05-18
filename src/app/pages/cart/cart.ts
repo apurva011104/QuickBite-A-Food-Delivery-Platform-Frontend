@@ -15,6 +15,7 @@ export class Cart implements OnInit {
   totalPrice = 0;
   loading = true;
   errorMessage = '';
+  itemTotal = 0;
 
   constructor(
     private readonly cartService: CartService,
@@ -69,11 +70,15 @@ export class Cart implements OnInit {
   }
 
   get subtotal(): number {
-    return this.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    this.itemTotal = this.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    return this.itemTotal;
   }
 
   get deliveryFee(): number {
-    return this.items.length ? 40 : 0;
+    if(this.itemTotal>=500.0){
+      return 0;
+    }
+    return 40;
   }
 
   get total(): number {

@@ -10,9 +10,16 @@ import {
 import { AuthService } from '../../core/services/auth.service';
 import {
   PaymentService,
+  RazorpayWalletTopUpOrderResponse,
   WalletResponse,
   WalletStatementResponse
 } from '../../core/services/payment.service';
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 @Component({
   selector: 'app-profile',
@@ -46,6 +53,7 @@ export class Profile implements OnInit {
   deactivating = false;
   loadingWallet = false;
   toppingUpWallet = false;
+  walletTopUpReferenceId: number | null = null;
 
   errorMessage = '';
   successMessage = '';
@@ -196,22 +204,20 @@ export class Profile implements OnInit {
       return;
     }
 
-    this.toppingUpWallet = true;
+    if (!this.isRazorpayAvailable()) {
+      this.errorMessage = 'Razorpay Checkout is unavailable right now. Please refresh and try again.';
+      return;
+    }
 
-    this.paymentService.addToWallet(this.walletTopUpAmount).subscribe({
-      next: (wallet) => {
-        this.wallet = wallet;
-        this.walletStatements = [...(wallet.statements || [])].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        this.walletTopUpAmount = null;
-        this.toppingUpWallet = false;
-        this.successMessage = 'Money added to wallet successfully.';
-        this.cdr.detectChanges();
+    this.toppingUpWallet = true;
+    this.paymentService.createWalletTopUpOrder({ amount: this.walletTopUpAmount }).subscribe({
+      next: (razorpayOrder) => {
+        this.walletTopUpReferenceId = razorpayOrder.paymentReferenceId;
+        this.openWalletTopUpCheckout(razorpayOrder);
       },
       error: (err: any) => {
         this.toppingUpWallet = false;
-        this.errorMessage = err?.error?.message || 'Unable to add money to wallet.';
+        this.errorMessage = err?.error?.message || 'Unable to start wallet top-up.';
         this.cdr.detectChanges();
       }
     });
@@ -233,5 +239,87 @@ export class Profile implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private openWalletTopUpCheckout(razorpayOrder: RazorpayWalletTopUpOrderResponse): void {
+    if (!this.isRazorpayAvailable()) {
+      this.finalizeWalletTopUpFailure('Razorpay Checkout is unavailable right now. Please try again.');
+      return;
+    }
+
+    const user = this.authService.getLoggedInUser();
+    const options = {
+      key: razorpayOrder.keyId,
+      amount: Math.round(razorpayOrder.amount * 100),
+      currency: razorpayOrder.currency,
+      name: 'QuickBite Wallet',
+      description: 'Add money to wallet',
+      order_id: razorpayOrder.razorpayOrderId,
+      prefill: {
+        name: user?.name || '',
+        email: user?.email || '',
+        contact: user?.phoneNumber || ''
+      },
+      notes: {
+        walletTopUpReferenceId: razorpayOrder.paymentReferenceId
+      },
+      theme: {
+        color: '#f97316'
+      },
+      handler: (response: any) => {
+        this.verifyWalletTopUpPayment(razorpayOrder.paymentReferenceId, response);
+      },
+      modal: {
+        ondismiss: () => {
+          this.finalizeWalletTopUpFailure('Wallet top-up cancelled.');
+        }
+      }
+    };
+
+    const razorpay = new window.Razorpay(options);
+    razorpay.on('payment.failed', (response: any) => {
+      this.finalizeWalletTopUpFailure(
+        response?.error?.description || 'Wallet top-up failed. Please try again.'
+      );
+    });
+
+    razorpay.open();
+  }
+
+  private verifyWalletTopUpPayment(paymentReferenceId: number, response: any): void {
+    this.paymentService.verifyWalletTopUpPayment({
+      paymentReferenceId,
+      razorpayOrderId: response.razorpay_order_id,
+      razorpayPaymentId: response.razorpay_payment_id,
+      razorpaySignature: response.razorpay_signature
+    }).subscribe({
+      next: (wallet) => {
+        this.wallet = wallet;
+        this.walletStatements = [...(wallet.statements || [])].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        this.walletTopUpAmount = null;
+        this.walletTopUpReferenceId = null;
+        this.toppingUpWallet = false;
+        this.successMessage = 'Money added to wallet successfully.';
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        this.finalizeWalletTopUpFailure(
+          err?.error?.message || 'Wallet top-up verification failed. Please try again.'
+        );
+      }
+    });
+  }
+
+  private isRazorpayAvailable(): boolean {
+    return typeof window !== 'undefined' && typeof window.Razorpay === 'function';
+  }
+
+  private finalizeWalletTopUpFailure(message: string): void {
+    this.walletTopUpReferenceId = null;
+    this.toppingUpWallet = false;
+    this.errorMessage = message;
+    this.cdr.detectChanges();
   }
 }

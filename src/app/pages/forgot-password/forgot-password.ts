@@ -2,32 +2,31 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { RegisterRequest, UserRole } from '../../core/models/auth.model';
+import { ForgotPasswordRequest, LoginType } from '../../core/models/auth.model';
 
 @Component({
-  selector: 'app-signup',
+  selector: 'app-forgot-password',
   standalone: true,
   imports: [FormsModule, RouterLink],
-  templateUrl: './signup.html'
+  templateUrl: './forgot-password.html'
 })
-export class Signup {
-  form: RegisterRequest = {
-    name: '',
-    email: '',
-    phoneNumber: '',
-    password: '',
-    role: 'CUSTOMER'
+export class ForgotPassword {
+  form: ForgotPasswordRequest = {
+    identifier: '',
+    loginType: 'EMAIL'
   };
 
   verificationId = '';
   otp = '';
+  newPassword = '';
+  confirmPassword = '';
   maskedEmail = '';
 
   errorMessage = '';
   infoMessage = '';
   otpRequested = false;
   requestingOtp = false;
-  verifyingOtp = false;
+  resettingPassword = false;
   resendingOtp = false;
 
   constructor(
@@ -39,14 +38,16 @@ export class Signup {
     this.errorMessage = '';
     this.infoMessage = '';
 
-    if (!this.form.name.trim() || !this.form.email.trim() || !this.form.phoneNumber?.trim() || !this.form.password?.trim()) {
-      this.errorMessage = 'Please fill in your name, email, phone number, and password.';
+    if (!this.form.identifier.trim()) {
+      this.errorMessage = this.form.loginType === 'EMAIL'
+        ? 'Enter your email address.'
+        : 'Enter your phone number.';
       return;
     }
 
     this.requestingOtp = true;
 
-    this.authService.requestSignupOtp(this.form).subscribe({
+    this.authService.requestPasswordResetOtp(this.form).subscribe({
       next: (response) => {
         this.requestingOtp = false;
         this.otpRequested = true;
@@ -61,7 +62,7 @@ export class Signup {
     });
   }
 
-  verifyAndCreateAccount(): void {
+  resetPassword(): void {
     this.errorMessage = '';
     this.infoMessage = '';
 
@@ -70,24 +71,33 @@ export class Signup {
       return;
     }
 
-    if (!this.otp.trim()) {
-      this.errorMessage = 'Enter the OTP you received.';
+    if (!this.otp.trim() || !this.newPassword.trim() || !this.confirmPassword.trim()) {
+      this.errorMessage = 'Enter the OTP, your new password, and confirm it.';
       return;
     }
 
-    this.verifyingOtp = true;
+    if (this.newPassword !== this.confirmPassword) {
+      this.errorMessage = 'New password and confirm password must match.';
+      return;
+    }
 
-    this.authService.verifySignupOtp({
+    this.resettingPassword = true;
+
+    this.authService.verifyPasswordResetOtp({
       verificationId: this.verificationId,
-      otp: this.otp.trim()
+      otp: this.otp.trim(),
+      newPassword: this.newPassword
     }).subscribe({
       next: (response) => {
-        this.verifyingOtp = false;
-        this.router.navigateByUrl(this.authService.getRedirectRouteByRole(response.role));
+        this.resettingPassword = false;
+        this.router.navigate(['/login'], {
+          queryParams: { reset: 'success' },
+          state: { message: response }
+        });
       },
       error: (err: any) => {
-        this.verifyingOtp = false;
-        this.errorMessage = err?.error?.message || 'Unable to verify OTP.';
+        this.resettingPassword = false;
+        this.errorMessage = err?.error?.message || 'Unable to reset password.';
       }
     });
   }
@@ -103,7 +113,7 @@ export class Signup {
 
     this.resendingOtp = true;
 
-    this.authService.resendSignupOtp(this.verificationId).subscribe({
+    this.authService.resendPasswordResetOtp(this.verificationId).subscribe({
       next: (response) => {
         this.resendingOtp = false;
         this.infoMessage = response.message;
@@ -119,16 +129,17 @@ export class Signup {
     this.otpRequested = false;
     this.verificationId = '';
     this.otp = '';
+    this.newPassword = '';
+    this.confirmPassword = '';
     this.maskedEmail = '';
     this.errorMessage = '';
     this.infoMessage = '';
   }
 
-  loginWithGoogle(): void {
-    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
-  }
-
-  setRole(role: UserRole): void {
-    this.form.role = role;
+  setLoginType(type: LoginType): void {
+    if (this.otpRequested) {
+      return;
+    }
+    this.form.loginType = type;
   }
 }

@@ -1,14 +1,18 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   AuthResponse,
   ChangePasswordRequest,
+  ForgotPasswordRequest,
   LoginRequest,
+  OtpDispatchResponse,
   RegisterRequest,
+  ResetPasswordWithOtpRequest,
   UserProfileResponse,
-  UserRole
+  UserRole,
+  VerifyOtpRequest
 } from '../models/auth.model';
 
 @Injectable({
@@ -21,16 +25,44 @@ export class AuthService {
 
   constructor(private readonly http: HttpClient) {}
 
-  signup(payload: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/register`, payload).pipe(
+  requestSignupOtp(payload: RegisterRequest): Observable<OtpDispatchResponse> {
+    return this.http.post<OtpDispatchResponse>(`${this.baseUrl}/register`, payload);
+  }
+
+  verifySignupOtp(payload: VerifyOtpRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}/register/verify`, payload).pipe(
       tap((response) => this.storeAuthData(response))
     );
   }
 
-  login(payload: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/login`, payload).pipe(
+  resendSignupOtp(verificationId: string): Observable<OtpDispatchResponse> {
+    return this.http.post<OtpDispatchResponse>(`${this.baseUrl}/register/resend`, { verificationId });
+  }
+
+  requestLoginOtp(payload: LoginRequest): Observable<OtpDispatchResponse> {
+    return this.http.post<OtpDispatchResponse>(`${this.baseUrl}/login`, payload);
+  }
+
+  verifyLoginOtp(payload: VerifyOtpRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}/login/verify`, payload).pipe(
       tap((response) => this.storeAuthData(response))
     );
+  }
+
+  resendLoginOtp(verificationId: string): Observable<OtpDispatchResponse> {
+    return this.http.post<OtpDispatchResponse>(`${this.baseUrl}/login/resend`, { verificationId });
+  }
+
+  requestPasswordResetOtp(payload: ForgotPasswordRequest): Observable<OtpDispatchResponse> {
+    return this.http.post<OtpDispatchResponse>(`${this.baseUrl}/password/forgot`, payload);
+  }
+
+  verifyPasswordResetOtp(payload: ResetPasswordWithOtpRequest): Observable<string> {
+    return this.http.post(`${this.baseUrl}/password/forgot/verify`, payload, { responseType: 'text' });
+  }
+
+  resendPasswordResetOtp(verificationId: string): Observable<OtpDispatchResponse> {
+    return this.http.post<OtpDispatchResponse>(`${this.baseUrl}/password/forgot/resend`, { verificationId });
   }
 
   logout(): Observable<string> {

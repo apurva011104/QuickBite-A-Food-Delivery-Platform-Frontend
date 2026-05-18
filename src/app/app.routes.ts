@@ -4,6 +4,7 @@ import { Home } from './pages/home/home';
 import { Restaurants } from './pages/restaurants/restaurants';
 import { Login } from './pages/login/login';
 import { Signup } from './pages/signup/signup';
+import { ForgotPassword } from './pages/forgot-password/forgot-password';
 import { Cart } from './pages/cart/cart';
 import { RestaurantDetails } from './pages/restaurant-details/restaurant-details';
 import { customerGuard } from './core/guards/customer.guard';
@@ -34,6 +35,7 @@ export const routes: Routes = [
       { path: 'restaurants', component: Restaurants },
       { path: 'restaurants/:id', component: RestaurantDetails },
       { path: 'login', component: Login },
+      { path: 'forgot-password', component: ForgotPassword },
       { path: 'signup', component: Signup },
       { path: 'cart', component: Cart, canActivate: [customerGuard] },
       { path: 'checkout', component: Checkout, canActivate: [customerGuard] },

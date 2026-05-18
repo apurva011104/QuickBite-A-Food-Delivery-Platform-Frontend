@@ -12,8 +12,8 @@ export class OrderTracking implements OnInit {
   order: OrderResponse | undefined;
   errorMessage = '';
 
-  readonly statuses = ['PLACED', 'CONFIRMED', 'PREPARING', 'PICKED_UP', 'DELIVERED'];
-
+  readonly statuses = ['PLACED', 'PAYMENT_PENDING', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'PICKED_UP', 'DELIVERED'];
+  
   constructor(
     private readonly route: ActivatedRoute,
     private readonly orderService: OrderService,

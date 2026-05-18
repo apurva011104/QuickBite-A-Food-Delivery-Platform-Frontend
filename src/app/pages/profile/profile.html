@@ -158,9 +158,13 @@
                   [disabled]="toppingUpWallet"
                   class="rounded-2xl bg-[var(--qb-primary)] px-5 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
                 >
-                  {{ toppingUpWallet ? 'Adding...' : 'Add Money' }}
+                  {{ toppingUpWallet ? 'Opening Razorpay...' : 'Add Money via Razorpay' }}
                 </button>
               </div>
+
+              <p class="mt-3 rounded-2xl bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                Wallet top-ups are processed securely through Razorpay.
+              </p>
 
               <div class="mt-6">
                 <h3 class="text-lg font-bold text-[var(--qb-text)]">Recent Wallet Activity</h3>

@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export type VehicleType = 'BIKE' | 'SCOOTER' | 'CYCLE' | 'TRUCK';
+export type DeliveryStatus = 'ASSIGNED' | 'PICKED_UP' | 'DELIVERED';
 
 export interface DeliveryAgentRequest {
   fullName: string;
@@ -30,7 +31,7 @@ export interface DeliveryAgentResponse {
 export interface ActiveDeliveryResponse {
   orderId: number;
   agentId: number;
-  status: string;
+  status: DeliveryStatus;
 }
 
 export interface LocationUpdateRequest {
@@ -43,6 +44,11 @@ export interface AvailabilityUpdateRequest {
 }
 
 export interface CompleteDeliveryRequest {
+  agentId: number;
+  orderId: number;
+}
+
+export interface PickupDeliveryRequest {
   agentId: number;
   orderId: number;
 }
@@ -75,6 +81,19 @@ export class DeliveryService {
     return this.http.get<DeliveryAgentResponse[]>(`${this.baseUrl}/verified`);
   }
 
+  getNearbyAgents(
+    latitude: number,
+    longitude: number,
+    radiusKm: number
+  ): Observable<DeliveryAgentResponse[]> {
+    const params = new HttpParams()
+      .set('latitude', latitude)
+      .set('longitude', longitude)
+      .set('radiusKm', radiusKm);
+
+    return this.http.get<DeliveryAgentResponse[]>(`${this.baseUrl}/nearby`, { params });
+  }
+
   updateLocation(agentId: number, payload: LocationUpdateRequest): Observable<{ message: string }> {
     return this.http.put<{ message: string }>(`${this.baseUrl}/${agentId}/location`, payload);
   }
@@ -96,6 +115,10 @@ export class DeliveryService {
       agentId,
       orderId
     });
+  }
+
+  pickupDelivery(payload: PickupDeliveryRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/pickup-delivery`, payload);
   }
 
   completeDelivery(payload: CompleteDeliveryRequest): Observable<{ message: string }> {

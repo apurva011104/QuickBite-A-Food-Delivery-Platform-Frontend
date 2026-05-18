@@ -3,11 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-export type PaymentMode = 'COD' | 'WALLET';
+export type PaymentMode = 'COD' | 'WALLET' | 'CARD' | 'UPI';
+
 export type OrderStatus =
   | 'PLACED'
+  | 'PAYMENT_PENDING'
   | 'CONFIRMED'
   | 'PREPARING'
+  | 'READY_FOR_PICKUP'
   | 'PICKED_UP'
   | 'DELIVERED'
   | 'CANCELLED';
@@ -25,6 +28,8 @@ export interface OrderRequest {
   discount?: number;
   paymentMode: PaymentMode;
   deliveryAddress: string;
+  deliveryLatitude: number;
+  deliveryLongitude: number;
   specialInstructions?: string;
   items: OrderItemRequest[];
 }
@@ -46,10 +51,12 @@ export interface OrderResponse {
   totalAmount: number;
   discount: number;
   finalAmount: number;
-  paymentMode: PaymentMode | 'CARD' | 'UPI';
+  paymentMode: PaymentMode;
   orderStatus: OrderStatus;
   orderDate: string;
   deliveryAddress: string;
+  deliveryLatitude: number;
+  deliveryLongitude: number;
   estimatedDelivery: string;
   specialInstructions?: string;
   items: OrderItemResponse[];
@@ -73,6 +80,13 @@ export class OrderService {
 
   getOrderById(orderId: number): Observable<OrderResponse> {
     return this.http.get<OrderResponse>(`${this.baseUrl}/${orderId}`);
+  }
+
+  updateOrderStatus(orderId: number, status: OrderStatus): Observable<OrderResponse> {
+    return this.http.put<OrderResponse>(
+      `${this.baseUrl}/${orderId}/status?status=${encodeURIComponent(status)}`,
+      {}
+    );
   }
 
   cancelOrder(orderId: number): Observable<OrderResponse> {

@@ -2,17 +2,20 @@
   <div class="mx-auto w-full max-w-lg rounded-3xl bg-white p-8 shadow-sm ring-1 ring-black/5">
     <div class="mb-8 text-center">
       <h1 class="text-3xl font-extrabold text-[var(--qb-text)]">Create Account</h1>
-      <p class="mt-2 text-[var(--qb-muted)]">Join QuickBite today</p>
+      <p class="mt-2 text-[var(--qb-muted)]">
+        Join QuickBite and verify your account before signup is completed.
+      </p>
     </div>
 
-    <form class="space-y-5" (ngSubmit)="onSignup()">
+    <form class="space-y-5">
       <div>
         <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Full Name</label>
         <input
           [(ngModel)]="form.name"
           name="name"
           type="text"
-          class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+          [disabled]="otpRequested"
+          class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)] disabled:bg-black/[0.03]"
           placeholder="Enter your full name"
         />
       </div>
@@ -23,7 +26,8 @@
           [(ngModel)]="form.email"
           name="email"
           type="email"
-          class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+          [disabled]="otpRequested"
+          class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)] disabled:bg-black/[0.03]"
           placeholder="Enter your email"
         />
       </div>
@@ -34,7 +38,8 @@
           [(ngModel)]="form.phoneNumber"
           name="phoneNumber"
           type="text"
-          class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+          [disabled]="otpRequested"
+          class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)] disabled:bg-black/[0.03]"
           placeholder="Enter your phone number"
         />
       </div>
@@ -45,7 +50,8 @@
           [(ngModel)]="form.password"
           name="password"
           type="password"
-          class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+          [disabled]="otpRequested"
+          class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)] disabled:bg-black/[0.03]"
           placeholder="Create a password"
         />
       </div>
@@ -55,7 +61,8 @@
         <select
           [(ngModel)]="form.role"
           name="role"
-          class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+          [disabled]="otpRequested"
+          class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none focus:border-[var(--qb-primary)] disabled:bg-black/[0.03]"
         >
           <option value="CUSTOMER">Customer</option>
           <option value="OWNER">Restaurant Owner</option>
@@ -63,19 +70,77 @@
         </select>
       </div>
 
+      @if (otpRequested) {
+        <div class="rounded-2xl bg-[var(--qb-surface)]/50 px-4 py-4">
+          <p class="text-sm font-semibold text-[var(--qb-text)]">Verify your account</p>
+          <p class="mt-2 text-sm text-[var(--qb-muted)]">
+            We sent a verification code to {{ maskedEmail }}.
+          </p>
+
+          <div class="mt-4">
+            <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">OTP</label>
+            <input
+              [(ngModel)]="otp"
+              name="otp"
+              type="text"
+              maxlength="6"
+              class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+              placeholder="Enter the 6-digit code"
+            />
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-3">
+            <button
+              type="button"
+              (click)="resendOtp()"
+              [disabled]="resendingOtp"
+              class="rounded-2xl border border-[var(--qb-primary)] px-4 py-3 text-sm font-semibold text-[var(--qb-primary)] transition hover:bg-orange-50 disabled:opacity-50"
+            >
+              {{ resendingOtp ? 'Resending...' : 'Resend OTP' }}
+            </button>
+
+            <button
+              type="button"
+              (click)="editDetails()"
+              class="rounded-2xl border border-black/10 px-4 py-3 text-sm font-semibold text-[var(--qb-text)] transition hover:bg-black/5"
+            >
+              Edit Details
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (infoMessage) {
+        <p class="rounded-2xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+          {{ infoMessage }}
+        </p>
+      }
+
       @if (errorMessage) {
         <p class="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
           {{ errorMessage }}
         </p>
       }
 
-      <button
-        type="submit"
-        [disabled]="submitting"
-        class="w-full rounded-2xl bg-[var(--qb-primary)] px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-      >
-        {{ submitting ? 'Creating Account...' : 'Create Account' }}
-      </button>
+      @if (!otpRequested) {
+        <button
+          type="button"
+          (click)="requestVerificationCode()"
+          [disabled]="requestingOtp"
+          class="w-full rounded-2xl bg-[var(--qb-primary)] px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+        >
+          {{ requestingOtp ? 'Sending OTP...' : 'Send Verification Code' }}
+        </button>
+      } @else {
+        <button
+          type="button"
+          (click)="verifyAndCreateAccount()"
+          [disabled]="verifyingOtp"
+          class="w-full rounded-2xl bg-[var(--qb-primary)] px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+        >
+          {{ verifyingOtp ? 'Verifying OTP...' : 'Verify and Create Account' }}
+        </button>
+      }
     </form>
 
     <div class="my-6 flex items-center gap-3">

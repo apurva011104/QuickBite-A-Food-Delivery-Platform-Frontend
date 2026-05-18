@@ -105,19 +105,23 @@ export class OrderHistory implements OnInit {
   }
 
   canCancel(status: string): boolean {
-    return status === 'PLACED' || status === 'CONFIRMED';
+    return status === 'PLACED' || status === 'PAYMENT_PENDING' || status === 'CONFIRMED';
   }
-
+  
   getStatusClasses(status: string): string {
     switch (status) {
       case 'DELIVERED':
         return 'bg-green-100 text-green-700';
       case 'PICKED_UP':
         return 'bg-blue-100 text-blue-700';
+      case 'READY_FOR_PICKUP':
+        return 'bg-cyan-100 text-cyan-700';
       case 'PREPARING':
         return 'bg-yellow-100 text-yellow-700';
       case 'CONFIRMED':
         return 'bg-orange-100 text-orange-700';
+      case 'PAYMENT_PENDING':
+        return 'bg-blue-100 text-blue-700';
       case 'PLACED':
         return 'bg-purple-100 text-purple-700';
       case 'CANCELLED':

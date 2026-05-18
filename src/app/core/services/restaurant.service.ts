@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Restaurant } from '../models/restaurant.model';
+import { OrderResponse } from './order.service';
 
 export interface RestaurantRequest {
   name: string;
@@ -16,6 +17,11 @@ export interface RestaurantRequest {
   deliveryRadius?: number;
   minOrderAmount?: number;
   estimatedDeliveryMin?: number;
+}
+
+export interface OwnerRestaurantDetailsResponse {
+  restaurant: Restaurant;
+  orders: OrderResponse[];
 }
 
 @Injectable({
@@ -41,6 +47,10 @@ export class RestaurantService {
 
   getMyRestaurants(): Observable<Restaurant[]> {
     return this.http.get<Restaurant[]>(`${this.baseUrl}/owner/my`);
+  }
+
+  getOwnerRestaurantDetails(id: number): Observable<OwnerRestaurantDetailsResponse> {
+    return this.http.get<OwnerRestaurantDetailsResponse>(`${this.baseUrl}/owner/details/${id}`);
   }
 
   updateRestaurant(id: number, payload: RestaurantRequest): Observable<Restaurant> {

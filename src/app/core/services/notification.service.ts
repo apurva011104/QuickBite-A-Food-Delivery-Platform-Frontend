@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, interval, switchMap, startWith } from 'rxjs';
+import { Observable, interval, of, startWith, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 
@@ -48,12 +48,16 @@ export class NotificationService {
     private readonly authService: AuthService
   ) {}
 
-  private get userId(): number {
+  private get userId(): number | null {
     const user = this.authService.getLoggedInUser();
-    return user?.id ?? 0;
+    return typeof user?.id === 'number' && user.id > 0 ? user.id : null;
   }
 
   getMyNotifications(): Observable<NotificationResponse[]> {
+    if (this.userId === null) {
+      return of([]);
+    }
+
     return this.http.get<NotificationResponse[]>(
       `${this.baseUrl}/recipient/${this.userId}`
     );
@@ -67,6 +71,10 @@ export class NotificationService {
   }
 
   getUnreadCount(): Observable<number> {
+    if (this.userId === null) {
+      return of(0);
+    }
+
     return this.http.get<number>(
       `${this.baseUrl}/recipient/${this.userId}/unread-count`
     );
@@ -87,6 +95,10 @@ export class NotificationService {
   }
 
   markAllAsRead(): Observable<any> {
+    if (this.userId === null) {
+      return of(null);
+    }
+
     return this.http.put(
       `${this.baseUrl}/recipient/${this.userId}/read-all`,
       {}

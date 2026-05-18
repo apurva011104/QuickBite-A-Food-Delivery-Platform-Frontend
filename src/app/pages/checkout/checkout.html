@@ -12,7 +12,9 @@
 
       <form class="mt-6 space-y-5">
         <div>
-          <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Full Address</label>
+          <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">
+            Full Address
+          </label>
           <textarea
             [(ngModel)]="fullAddress"
             name="fullAddress"
@@ -24,41 +26,114 @@
 
         <div class="grid gap-5 md:grid-cols-2">
           <div>
-            <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">City</label>
+            <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">
+              City
+            </label>
             <input
               [(ngModel)]="city"
               name="city"
               type="text"
-              placeholder="Enter city"
+              placeholder="City"
               class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
             />
           </div>
 
           <div>
-            <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Pincode</label>
+            <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">
+              Pincode
+            </label>
             <input
               [(ngModel)]="pincode"
               name="pincode"
               type="text"
-              placeholder="Enter pincode"
+              placeholder="Pincode"
+              inputmode="numeric"
+              maxlength="6"
               class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
             />
           </div>
         </div>
 
+        <div class="rounded-3xl border border-black/10 bg-[var(--qb-surface)]/50 p-5">
+          <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <h3 class="text-sm font-semibold text-[var(--qb-text)]">Delivery Location</h3>
+              <p class="mt-1 text-sm text-[var(--qb-muted)]">
+                Add a valid map location so delivery can reach the exact destination.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              (click)="useCurrentLocation()"
+              [disabled]="locating"
+              class="rounded-2xl border border-[var(--qb-primary)] px-4 py-2 text-sm font-semibold text-[var(--qb-primary)] transition hover:bg-[var(--qb-primary)] hover:text-white disabled:opacity-50"
+            >
+              {{ locating ? 'Locating...' : 'Use Current Location' }}
+            </button>
+          </div>
+
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <div>
+              <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">
+                Latitude
+              </label>
+              <input
+                [(ngModel)]="deliveryLatitude"
+                (ngModelChange)="onLocationInputChange()"
+                name="deliveryLatitude"
+                type="number"
+                step="any"
+                placeholder="e.g. 28.6139"
+                class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+              />
+            </div>
+
+            <div>
+              <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">
+                Longitude
+              </label>
+              <input
+                [(ngModel)]="deliveryLongitude"
+                (ngModelChange)="onLocationInputChange()"
+                name="deliveryLongitude"
+                type="number"
+                step="any"
+                placeholder="e.g. 77.2090"
+                class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
+              />
+            </div>
+          </div>
+
+          <p class="mt-3 text-xs text-[var(--qb-muted)]">
+            Use your current location, or enter coordinates manually if browser access is unavailable.
+          </p>
+
+          @if (locationHelpMessage) {
+            <p class="mt-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+              {{ locationHelpMessage }}
+            </p>
+          }
+        </div>
+
         <div>
-          <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Special Instructions</label>
+          <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">
+            Special Instructions
+          </label>
           <textarea
             [(ngModel)]="specialInstructions"
             name="specialInstructions"
             rows="3"
-            placeholder="Any special instructions?"
+            placeholder="Optional"
             class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none transition focus:border-[var(--qb-primary)]"
           ></textarea>
         </div>
 
         <div>
-          <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Payment Method</label>
+          <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">
+            Payment Mode
+          </label>
+
           <select
             [(ngModel)]="paymentMode"
             name="paymentMode"
@@ -66,24 +141,31 @@
           >
             <option value="COD">Cash on Delivery</option>
             <option value="WALLET">Wallet</option>
-            <option value="UPI" disabled>UPI (Coming soon)</option>
-            <option value="CARD" disabled>Card (Coming soon)</option>
+            <option value="UPI">UPI / Razorpay</option>
+            <option value="CARD">Card / Razorpay</option>
           </select>
         </div>
 
-        <div class="rounded-2xl bg-orange-50 px-4 py-3 text-sm">
-          <p class="font-semibold text-[var(--qb-text)]">Wallet Balance</p>
-          @if (walletLoading) {
-            <p class="mt-1 text-[var(--qb-muted)]">Loading wallet balance...</p>
-          } @else {
-            <p class="mt-1 text-[var(--qb-muted)]">₹{{ walletBalance }}</p>
-          }
-        </div>
+        @if (paymentMode === 'WALLET') {
+          <div class="rounded-2xl bg-orange-50 px-4 py-3 text-sm text-[var(--qb-text)]">
+            @if (walletLoading) {
+              Checking wallet balance...
+            } @else {
+              Wallet Balance: ₹{{ walletBalance }}
 
-        @if (paymentMode === 'WALLET' && !walletLoading && !walletSufficient) {
-          <p class="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-            Insufficient wallet balance for this order.
-          </p>
+              @if (!walletSufficient) {
+                <p class="mt-2 font-semibold text-red-600">
+                  Insufficient wallet balance for this order.
+                </p>
+              }
+            }
+          </div>
+        }
+
+        @if (paymentMode === 'UPI' || paymentMode === 'CARD') {
+          <div class="rounded-2xl bg-blue-50 px-4 py-3 text-sm text-blue-700">
+            You will be redirected to Razorpay Checkout for secure payment.
+          </div>
         }
 
         @if (errorMessage) {
@@ -133,7 +215,7 @@
         [disabled]="submitting || (paymentMode === 'WALLET' && !walletSufficient)"
         class="mt-6 w-full rounded-2xl bg-[var(--qb-primary)] px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
       >
-        {{ submitting ? 'Placing Order...' : 'Place Order' }}
+        {{ submitting ? 'Processing...' : 'Place Order' }}
       </button>
     </div>
   </div>

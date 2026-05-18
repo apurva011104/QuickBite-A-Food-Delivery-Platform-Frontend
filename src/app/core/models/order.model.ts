@@ -1,7 +1,11 @@
+export type PaymentMode = 'COD' | 'WALLET' | 'CARD' | 'UPI';
+
 export type OrderStatus =
   | 'PLACED'
+  | 'PAYMENT_PENDING'
   | 'CONFIRMED'
   | 'PREPARING'
+  | 'READY_FOR_PICKUP'
   | 'PICKED_UP'
   | 'DELIVERED'
   | 'CANCELLED';

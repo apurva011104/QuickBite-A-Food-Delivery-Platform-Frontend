@@ -16,6 +16,29 @@ export interface RegisterRequest {
   role: UserRole;
 }
 
+export interface OtpDispatchResponse {
+  verificationId: string;
+  maskedEmail: string;
+  expiresInSeconds: number;
+  message: string;
+}
+
+export interface VerifyOtpRequest {
+  verificationId: string;
+  otp: string;
+}
+
+export interface ForgotPasswordRequest {
+  identifier: string;
+  loginType: LoginType;
+}
+
+export interface ResetPasswordWithOtpRequest {
+  verificationId: string;
+  otp: string;
+  newPassword: string;
+}
+
 export interface AuthResponse {
   id: number;
   name: string;

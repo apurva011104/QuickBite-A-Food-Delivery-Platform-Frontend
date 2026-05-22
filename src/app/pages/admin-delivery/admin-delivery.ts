@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { DeliveryAgentResponse, DeliveryService } from '../../core/services/delivery.service';
 import { OrderResponse, OrderService } from '../../core/services/order.service';
 import { RestaurantService } from '../../core/services/restaurant.service';
@@ -17,11 +18,12 @@ interface NearbyAgentSuggestion extends DeliveryAgentResponse {
   templateUrl: './admin-delivery.html'
 })
 export class AdminDelivery implements OnInit {
+  pendingAgents: DeliveryAgentResponse[] = [];
   verifiedAgents: DeliveryAgentResponse[] = [];
   availableAgents: DeliveryAgentResponse[] = [];
   suggestedAgents: NearbyAgentSuggestion[] = [];
 
-  verificationAgentId: number | null = null;
+  verifyingAgentId: number | null = null;
   selectedAgentId: number | null = null;
   orderId: number | null = null;
   radiusKm = 5;
@@ -54,56 +56,51 @@ export class AdminDelivery implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.deliveryService.getAllVerifiedAgents().subscribe({
-      next: (verified) => {
+    forkJoin({
+      pending: this.deliveryService.getPendingAgents(),
+      verified: this.deliveryService.getAllVerifiedAgents(),
+      available: this.deliveryService.getAllAvailableAgents()
+    }).subscribe({
+      next: ({ pending, verified, available }) => {
+        this.pendingAgents = [...pending];
         this.verifiedAgents = [...verified];
-        this.cdr.detectChanges();
-      },
-      error: (err: any) => {
-        this.errorMessage = err?.error?.message || 'Unable to load verified agents.';
-        this.loading = false;
-        this.cdr.detectChanges();
-      }
-    });
-
-    this.deliveryService.getAllAvailableAgents().subscribe({
-      next: (available) => {
         this.availableAgents = [...available];
         this.loading = false;
         this.cdr.detectChanges();
       },
       error: (err: any) => {
-        this.errorMessage = err?.error?.message || 'Unable to load available agents.';
+        this.errorMessage = err?.error?.message || 'Unable to load delivery dashboard data.';
         this.loading = false;
         this.cdr.detectChanges();
       }
     });
   }
 
-  verifyAgent(verified: boolean): void {
+  verifyAgent(agentId: number, verified: boolean): void {
     this.errorMessage = '';
     this.successMessage = '';
 
-    if (!this.verificationAgentId) {
-      this.errorMessage = 'Enter an agent ID first.';
-      return;
-    }
-
     this.verifying = true;
+    this.verifyingAgentId = agentId;
 
-    this.deliveryService.verifyAgent(this.verificationAgentId, verified).subscribe({
+    this.deliveryService.verifyAgent(agentId, verified).subscribe({
       next: (res) => {
         this.successMessage = res.message || (verified ? 'Agent approved.' : 'Agent rejected.');
-        this.verificationAgentId = null;
         this.verifying = false;
+        this.verifyingAgentId = null;
         this.loadDashboard();
       },
       error: (err: any) => {
         this.verifying = false;
+        this.verifyingAgentId = null;
         this.errorMessage = err?.error?.message || 'Unable to update agent verification.';
         this.cdr.detectChanges();
       }
     });
+  }
+
+  isVerifyingAgent(agentId: number): boolean {
+    return this.verifying && this.verifyingAgentId === agentId;
   }
 
   lookupOrder(): void {

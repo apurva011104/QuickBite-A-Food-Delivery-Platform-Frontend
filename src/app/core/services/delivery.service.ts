@@ -89,6 +89,10 @@ export class DeliveryService {
     return this.http.get<DeliveryAgentResponse[]>(`${this.baseUrl}/verified`);
   }
 
+  getPendingAgents(): Observable<DeliveryAgentResponse[]> {
+    return this.http.get<DeliveryAgentResponse[]>(`${this.baseUrl}/pending`);
+  }
+
   getNearbyAgents(
     latitude: number,
     longitude: number,

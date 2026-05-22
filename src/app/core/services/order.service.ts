@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, interval, startWith, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export type PaymentMode = 'COD' | 'WALLET' | 'CARD' | 'UPI';
@@ -11,8 +11,10 @@ export type OrderStatus =
   | 'CONFIRMED'
   | 'PREPARING'
   | 'READY_FOR_PICKUP'
+  | 'OUT_FOR_DELIVERY'
   | 'PICKED_UP'
   | 'DELIVERED'
+  | 'REJECTED'
   | 'CANCELLED';
 
 export interface OrderItemRequest {
@@ -78,8 +80,22 @@ export class OrderService {
     return this.http.get<OrderResponse[]>(`${this.baseUrl}/customer`);
   }
 
+  getMyOrdersLive(pollMs = 15000): Observable<OrderResponse[]> {
+    return interval(pollMs).pipe(
+      startWith(0),
+      switchMap(() => this.getMyOrders())
+    );
+  }
+
   getOrderById(orderId: number): Observable<OrderResponse> {
     return this.http.get<OrderResponse>(`${this.baseUrl}/${orderId}`);
+  }
+
+  getOrderByIdLive(orderId: number, pollMs = 10000): Observable<OrderResponse> {
+    return interval(pollMs).pipe(
+      startWith(0),
+      switchMap(() => this.getOrderById(orderId))
+    );
   }
 
   updateOrderStatus(orderId: number, status: OrderStatus): Observable<OrderResponse> {

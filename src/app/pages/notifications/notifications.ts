@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { NotificationResponse, NotificationService } from '../../core/services/notification.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -21,6 +22,7 @@ export class Notifications implements OnInit, OnDestroy {
   constructor(
     public readonly authService: AuthService,
     private readonly notificationService: NotificationService,
+    private readonly router: Router,
     private readonly cdr: ChangeDetectorRef
   ) {}
 
@@ -105,6 +107,43 @@ export class Notifications implements OnInit, OnDestroy {
 
   unreadCount(): number {
     return this.notifications.filter((n) => !n.isRead).length;
+  }
+
+  hasDirectAction(notification: NotificationResponse): boolean {
+    const route = this.notificationService.getNotificationRoute(notification);
+    return !!route && route !== '/notifications' && route !== '/admin/notifications';
+  }
+
+  getActionLabel(notification: NotificationResponse): string {
+    return this.notificationService.getNotificationActionLabel(notification);
+  }
+
+  openNotification(notification: NotificationResponse): void {
+    const route = this.notificationService.getNotificationRoute(notification);
+    if (!route) {
+      return;
+    }
+
+    const navigate = () => {
+      void this.router.navigateByUrl(route);
+    };
+
+    if (notification.isRead || this.authService.isAdmin()) {
+      navigate();
+      return;
+    }
+
+    this.notificationService.markAsRead(notification.notificationId).subscribe({
+      next: () => {
+        notification.isRead = true;
+        window.dispatchEvent(new Event('storage'));
+        this.cdr.detectChanges();
+        navigate();
+      },
+      error: () => {
+        navigate();
+      }
+    });
   }
 
   getTypeClasses(type: string): string {

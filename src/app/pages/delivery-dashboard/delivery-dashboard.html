@@ -233,6 +233,26 @@
                   </div>
 
                   @if (delivery.status === 'ASSIGNED') {
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        (click)="acceptDelivery(delivery.orderId)"
+                        [disabled]="processingDeliveryId === delivery.orderId"
+                        class="rounded-2xl bg-[var(--qb-primary)] px-4 py-2 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+                      >
+                        {{ processingDeliveryId === delivery.orderId ? 'Updating...' : 'Accept Delivery' }}
+                      </button>
+
+                      <button
+                        type="button"
+                        (click)="rejectDelivery(delivery.orderId)"
+                        [disabled]="processingDeliveryId === delivery.orderId"
+                        class="rounded-2xl border border-red-300 px-4 py-2 font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                      >
+                        {{ processingDeliveryId === delivery.orderId ? 'Updating...' : 'Reject Delivery' }}
+                      </button>
+                    </div>
+                  } @else if (delivery.status === 'ACCEPTED') {
                     <button
                       type="button"
                       (click)="pickupDelivery(delivery.orderId)"

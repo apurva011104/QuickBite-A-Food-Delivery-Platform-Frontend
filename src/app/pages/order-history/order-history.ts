@@ -1,6 +1,7 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { OrderResponse, OrderService } from '../../core/services/order.service';
 import { CartService } from '../../core/services/cart.service';
 
@@ -10,11 +11,13 @@ import { CartService } from '../../core/services/cart.service';
   imports: [RouterLink, DatePipe],
   templateUrl: './order-history.html'
 })
-export class OrderHistory implements OnInit {
+export class OrderHistory implements OnInit, OnDestroy {
   orders: OrderResponse[] = [];
   errorMessage = '';
   loading = true;
   reordering = false;
+  private ordersSubscription?: Subscription;
+  private readonly pollMs = 15000;
 
   constructor(
     private readonly orderService: OrderService,
@@ -24,14 +27,37 @@ export class OrderHistory implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadOrders();
+    this.startLiveUpdates();
+  }
+
+  ngOnDestroy(): void {
+    this.stopLiveUpdates();
   }
 
   loadOrders(): void {
-    this.loading = true;
+    this.loading = this.orders.length === 0;
     this.errorMessage = '';
 
     this.orderService.getMyOrders().subscribe({
+      next: (orders) => {
+        this.orders = [...orders];
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        this.errorMessage = err?.error?.message || 'Unable to load orders.';
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private startLiveUpdates(): void {
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.ordersSubscription?.unsubscribe();
+    this.ordersSubscription = this.orderService.getMyOrdersLive(this.pollMs).subscribe({
       next: (orders) => {
         this.orders = [...orders];
         this.loading = false;
@@ -105,13 +131,15 @@ export class OrderHistory implements OnInit {
   }
 
   canCancel(status: string): boolean {
-    return status === 'PLACED' || status === 'PAYMENT_PENDING' || status === 'CONFIRMED';
+    return status === 'PLACED' || status === 'PAYMENT_PENDING';
   }
   
   getStatusClasses(status: string): string {
     switch (status) {
       case 'DELIVERED':
         return 'bg-green-100 text-green-700';
+      case 'OUT_FOR_DELIVERY':
+        return 'bg-sky-100 text-sky-700';
       case 'PICKED_UP':
         return 'bg-blue-100 text-blue-700';
       case 'READY_FOR_PICKUP':
@@ -124,10 +152,17 @@ export class OrderHistory implements OnInit {
         return 'bg-blue-100 text-blue-700';
       case 'PLACED':
         return 'bg-purple-100 text-purple-700';
+      case 'REJECTED':
+        return 'bg-rose-100 text-rose-700';
       case 'CANCELLED':
         return 'bg-red-100 text-red-700';
       default:
         return 'bg-gray-100 text-gray-700';
     }
+  }
+
+  private stopLiveUpdates(): void {
+    this.ordersSubscription?.unsubscribe();
+    this.ordersSubscription = undefined;
   }
 }

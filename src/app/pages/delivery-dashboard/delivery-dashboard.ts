@@ -291,8 +291,34 @@ export class DeliveryDashboard implements OnInit {
         agentId: this.agent.agentId,
         orderId
       }),
-      'PICKED_UP',
-      'Order picked up successfully.'
+      'OUT_FOR_DELIVERY',
+      'Order picked up and marked out for delivery.'
+    );
+  }
+
+  acceptDelivery(orderId: number): void {
+    if (!this.agent) return;
+
+    this.runDeliveryAction(
+      orderId,
+      this.deliveryService.acceptDelivery({
+        agentId: this.agent.agentId,
+        orderId
+      }),
+      'Delivery accepted successfully.'
+    );
+  }
+
+  rejectDelivery(orderId: number): void {
+    if (!this.agent) return;
+
+    this.runDeliveryAction(
+      orderId,
+      this.deliveryService.rejectDelivery({
+        agentId: this.agent.agentId,
+        orderId
+      }),
+      'Delivery rejected. You are available for another assignment now.'
     );
   }
 
@@ -373,6 +399,29 @@ export class DeliveryDashboard implements OnInit {
           this.cdr.detectChanges();
         }
       });
+  }
+
+  private runDeliveryAction(
+    orderId: number,
+    deliveryRequest: ReturnType<DeliveryService['acceptDelivery']>,
+    successFallback: string
+  ): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.processingDeliveryId = orderId;
+
+    deliveryRequest.subscribe({
+      next: (response) => {
+        this.processingDeliveryId = null;
+        this.successMessage = response.message || successFallback;
+        this.loadAgentDashboard();
+      },
+      error: (err: any) => {
+        this.processingDeliveryId = null;
+        this.errorMessage = err?.error?.message || 'Unable to update delivery status.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private hasCoordinates(

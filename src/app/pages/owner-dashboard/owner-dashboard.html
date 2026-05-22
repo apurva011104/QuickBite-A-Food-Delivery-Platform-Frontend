@@ -300,7 +300,29 @@
                               <p class="text-2xl font-extrabold text-[var(--qb-text)]">₹{{ order.finalAmount }}</p>
                               <p class="mt-1 text-sm text-[var(--qb-muted)]">{{ order.paymentMode }}</p>
                               <div class="mt-3 flex flex-col items-end gap-2">
-                                @if (canStartPreparing(order)) {
+                                @if (canConfirmOrder(order)) {
+                                  <div class="flex flex-wrap justify-end gap-2">
+                                    <button
+                                      type="button"
+                                      [disabled]="isOrderStatusLoading(order.orderId)"
+                                      (click)="updateOrderStatus(restaurant.restaurantId, order, 'CONFIRMED')"
+                                      class="rounded-xl border border-amber-200 px-3 py-2 text-sm font-semibold text-amber-700 disabled:opacity-50"
+                                    >
+                                      {{ isOrderStatusLoading(order.orderId) ? 'Updating...' : 'Confirm Order' }}
+                                    </button>
+
+                                    @if (canRejectOrder(order)) {
+                                      <button
+                                        type="button"
+                                        [disabled]="isOrderStatusLoading(order.orderId)"
+                                        (click)="updateOrderStatus(restaurant.restaurantId, order, 'REJECTED')"
+                                        class="rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 disabled:opacity-50"
+                                      >
+                                        {{ isOrderStatusLoading(order.orderId) ? 'Updating...' : 'Reject Order' }}
+                                      </button>
+                                    }
+                                  </div>
+                                } @else if (canStartPreparing(order)) {
                                   <button
                                     type="button"
                                     [disabled]="isOrderStatusLoading(order.orderId)"

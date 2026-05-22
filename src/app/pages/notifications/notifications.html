@@ -87,6 +87,16 @@
             </div>
 
             <div class="flex flex-wrap gap-2 lg:justify-end">
+              @if (hasDirectAction(notification)) {
+                <button
+                  type="button"
+                  (click)="openNotification(notification)"
+                  class="rounded-xl bg-[var(--qb-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                >
+                  {{ getActionLabel(notification) }}
+                </button>
+              }
+
               @if (!notification.isRead && !authService.isAdmin()) {
                 <button
                   type="button"

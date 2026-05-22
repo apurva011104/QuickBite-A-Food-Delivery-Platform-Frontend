@@ -6,8 +6,10 @@ export type OrderStatus =
   | 'CONFIRMED'
   | 'PREPARING'
   | 'READY_FOR_PICKUP'
+  | 'OUT_FOR_DELIVERY'
   | 'PICKED_UP'
   | 'DELIVERED'
+  | 'REJECTED'
   | 'CANCELLED';
 
 export interface Order {

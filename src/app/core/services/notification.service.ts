@@ -123,4 +123,57 @@ export class NotificationService {
   sendBulk(payload: NotificationBulkRequest): Observable<NotificationResponse[]> {
     return this.http.post<NotificationResponse[]>(`${this.baseUrl}/bulk`, payload);
   }
+
+  getNotificationActionLabel(notification: NotificationResponse): string {
+    const route = this.getNotificationRoute(notification);
+
+    if (route?.startsWith('/orders/')) {
+      return 'Track Order';
+    }
+
+    switch (route) {
+      case '/owner':
+        return 'Open Owner Dashboard';
+      case '/delivery':
+        return 'Open Delivery Dashboard';
+      case '/admin/notifications':
+        return 'Open Admin Alerts';
+      case '/notifications':
+        return 'Open Notifications';
+      default:
+        return 'View Details';
+    }
+  }
+
+  getNotificationRoute(notification: NotificationResponse): string | null {
+    const role = this.authService.getLoggedInUser()?.role;
+    if (!role) {
+      return null;
+    }
+
+    if (notification.relatedType === 'ORDER' && notification.relatedId) {
+      switch (role) {
+        case 'CUSTOMER':
+          return `/orders/${notification.relatedId}`;
+        case 'OWNER':
+          return '/owner';
+        case 'AGENT':
+          return '/delivery';
+        case 'ADMIN':
+          return '/admin/notifications';
+        default:
+          return '/notifications';
+      }
+    }
+
+    if (notification.type === 'DELIVERY' && role === 'AGENT') {
+      return '/delivery';
+    }
+
+    if (role === 'ADMIN') {
+      return '/admin/notifications';
+    }
+
+    return '/notifications';
+  }
 }

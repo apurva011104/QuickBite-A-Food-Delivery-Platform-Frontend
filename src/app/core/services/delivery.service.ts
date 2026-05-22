@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export type VehicleType = 'BIKE' | 'SCOOTER' | 'CYCLE' | 'TRUCK';
-export type DeliveryStatus = 'ASSIGNED' | 'PICKED_UP' | 'DELIVERED';
+export type DeliveryStatus = 'ASSIGNED' | 'ACCEPTED' | 'PICKED_UP' | 'DELIVERED' | 'REJECTED';
 
 export interface DeliveryAgentRequest {
   fullName: string;
@@ -115,6 +115,14 @@ export class DeliveryService {
       agentId,
       orderId
     });
+  }
+
+  acceptDelivery(payload: PickupDeliveryRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/accept-delivery`, payload);
+  }
+
+  rejectDelivery(payload: PickupDeliveryRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/reject-delivery`, payload);
   }
 
   pickupDelivery(payload: PickupDeliveryRequest): Observable<{ message: string }> {

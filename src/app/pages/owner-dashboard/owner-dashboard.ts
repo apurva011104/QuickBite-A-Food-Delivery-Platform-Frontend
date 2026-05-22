@@ -222,6 +222,10 @@ export class OwnerDashboard implements OnInit {
     return !!this.orderStatusLoading[orderId];
   }
 
+  canConfirmOrder(order: OrderResponse): boolean {
+    return order.orderStatus === 'PLACED';
+  }
+
   canStartPreparing(order: OrderResponse): boolean {
     return order.orderStatus === 'CONFIRMED';
   }
@@ -230,7 +234,15 @@ export class OwnerDashboard implements OnInit {
     return order.orderStatus === 'PREPARING';
   }
 
-  updateOrderStatus(restaurantId: number, order: OrderResponse, status: 'PREPARING' | 'READY_FOR_PICKUP'): void {
+  canRejectOrder(order: OrderResponse): boolean {
+    return order.orderStatus === 'PLACED';
+  }
+
+  updateOrderStatus(
+    restaurantId: number,
+    order: OrderResponse,
+    status: 'CONFIRMED' | 'PREPARING' | 'READY_FOR_PICKUP' | 'REJECTED'
+  ): void {
     this.errorMessage = '';
     this.successMessage = '';
     this.orderStatusLoading[order.orderId] = true;
@@ -244,9 +256,13 @@ export class OwnerDashboard implements OnInit {
           );
         }
 
-        this.successMessage = status === 'PREPARING'
-          ? `Order #${order.orderId} is now being prepared.`
-          : `Order #${order.orderId} is ready for pickup.`;
+        this.successMessage = status === 'CONFIRMED'
+          ? `Order #${order.orderId} has been confirmed.`
+          : status === 'PREPARING'
+            ? `Order #${order.orderId} is now being prepared.`
+            : status === 'READY_FOR_PICKUP'
+              ? `Order #${order.orderId} is ready for pickup.`
+              : `Order #${order.orderId} was rejected.`;
         this.orderStatusLoading[order.orderId] = false;
         this.cdr.detectChanges();
       },

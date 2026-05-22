@@ -74,6 +74,15 @@
                   Track
                 </a>
 
+                @if (order.orderStatus === 'DELIVERED') {
+                  <a
+                    [routerLink]="['/orders', order.orderId, 'review']"
+                    class="rounded-2xl border border-[var(--qb-primary)] px-4 py-2 font-semibold text-[var(--qb-primary)] transition hover:bg-orange-50"
+                  >
+                    Review Order
+                  </a>
+                }
+
                 @if (canCancel(order.orderStatus)) {
                   <button
                     type="button"

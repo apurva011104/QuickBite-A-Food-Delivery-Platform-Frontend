@@ -1,0 +1,191 @@
+@if (loading) {
+  <section class="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="rounded-3xl bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
+      Loading review form...
+    </div>
+  </section>
+} @else {
+  <section class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+    <div class="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-black/5">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p class="text-sm text-[var(--qb-muted)]">Order Review</p>
+          <h1 class="mt-2 text-3xl font-extrabold text-[var(--qb-text)]">
+            Review Order #{{ order?.orderId }}
+          </h1>
+          <p class="mt-3 max-w-2xl text-[var(--qb-muted)]">
+            Rate the menu items you received and the delivery experience for this order.
+          </p>
+        </div>
+
+        <a
+          routerLink="/orders"
+          class="rounded-2xl border border-black/10 bg-white px-5 py-3 font-semibold text-[var(--qb-text)] transition hover:bg-black/5"
+        >
+          Back to Orders
+        </a>
+      </div>
+
+      @if (errorMessage) {
+        <div class="mt-6 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+          {{ errorMessage }}
+        </div>
+      }
+
+      @if (successMessage) {
+        <div class="mt-6 rounded-2xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+          {{ successMessage }}
+        </div>
+      }
+
+      @if (!isDelivered) {
+        <div class="mt-8 rounded-2xl bg-orange-50 px-5 py-5 text-sm font-medium text-[var(--qb-primary)]">
+          Reviews are available only after the order is marked as delivered.
+        </div>
+      } @else if (existingReview) {
+        <div class="mt-8 space-y-6">
+          <div class="rounded-2xl bg-green-50 px-5 py-5">
+            <p class="text-sm font-semibold uppercase tracking-[0.18em] text-green-700">Review Submitted</p>
+            <p class="mt-2 text-sm text-[var(--qb-muted)]">
+              Submitted on {{ existingReview.reviewDate | date:'medium' }}
+            </p>
+          </div>
+
+          <div class="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+            <div class="rounded-2xl border border-black/10 p-5">
+              <h2 class="text-lg font-bold text-[var(--qb-text)]">Delivery Experience</h2>
+              <p class="mt-4 text-sm text-[var(--qb-muted)]">Rating</p>
+              <p class="mt-1 text-2xl font-extrabold text-[var(--qb-primary)]">
+                {{ existingReview.deliveryRating }}/5
+              </p>
+
+              <p class="mt-4 text-sm text-[var(--qb-muted)]">Feedback</p>
+              <p class="mt-2 text-sm text-[var(--qb-text)]">
+                {{ existingReview.comment || 'No delivery comment shared.' }}
+              </p>
+            </div>
+
+            <div class="rounded-2xl border border-black/10 p-5">
+              <h2 class="text-lg font-bold text-[var(--qb-text)]">Menu Item Reviews</h2>
+              <div class="mt-4 space-y-4">
+                @for (itemReview of existingReview.itemReviews; track itemReview.menuItemReviewId) {
+                  <div class="rounded-2xl bg-[var(--qb-surface)]/50 p-4">
+                    <div class="flex items-start justify-between gap-4">
+                      <div>
+                        <p class="font-semibold text-[var(--qb-text)]">{{ itemReview.itemName }}</p>
+                        <p class="mt-2 text-sm text-[var(--qb-muted)]">
+                          {{ itemReview.comment || 'No item-specific comment shared.' }}
+                        </p>
+                      </div>
+
+                      <div class="rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-[var(--qb-primary)]">
+                        {{ itemReview.rating }}/5
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="mt-8 space-y-6">
+          <div class="rounded-2xl border border-black/10 p-5">
+            <h2 class="text-xl font-bold text-[var(--qb-text)]">Delivery Review</h2>
+            <p class="mt-2 text-sm text-[var(--qb-muted)]">
+              Tell us how the delivery experience felt overall.
+            </p>
+
+            <div class="mt-5 grid gap-5 md:grid-cols-[220px_1fr]">
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Delivery Rating</label>
+                <select
+                  [(ngModel)]="deliveryRating"
+                  name="deliveryRating"
+                  class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+                >
+                  <option [ngValue]="null">Select rating</option>
+                  @for (rating of ratingOptions; track rating) {
+                    <option [ngValue]="rating">{{ rating }}/5</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Delivery Feedback</label>
+                <textarea
+                  [(ngModel)]="deliveryComment"
+                  name="deliveryComment"
+                  rows="4"
+                  maxlength="1000"
+                  placeholder="Share what went well or what could be better."
+                  class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-black/10 p-5">
+            <h2 class="text-xl font-bold text-[var(--qb-text)]">Menu Item Reviews</h2>
+            <p class="mt-2 text-sm text-[var(--qb-muted)]">
+              Rate each distinct menu item from this delivered order.
+            </p>
+
+            <div class="mt-5 space-y-4">
+              @for (item of itemReviewForm; track item.menuItemId) {
+                <div class="rounded-2xl bg-[var(--qb-surface)]/50 p-4">
+                  <div class="grid gap-4 md:grid-cols-[220px_1fr]">
+                    <div>
+                      <p class="font-semibold text-[var(--qb-text)]">{{ item.itemName }}</p>
+                      <label class="mt-4 mb-2 block text-sm font-semibold text-[var(--qb-text)]">Rating</label>
+                      <select
+                        [(ngModel)]="item.rating"
+                        [name]="'rating-' + item.menuItemId"
+                        class="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+                      >
+                        <option [ngValue]="null">Select rating</option>
+                        @for (rating of ratingOptions; track rating) {
+                          <option [ngValue]="rating">{{ rating }}/5</option>
+                        }
+                      </select>
+                    </div>
+
+                    <div>
+                      <label class="mb-2 block text-sm font-semibold text-[var(--qb-text)]">Item Feedback</label>
+                      <textarea
+                        [(ngModel)]="item.comment"
+                        [name]="'comment-' + item.menuItemId"
+                        rows="4"
+                        maxlength="500"
+                        placeholder="Share quick feedback for this item."
+                        class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <button
+              type="button"
+              (click)="submitReview()"
+              [disabled]="!canSubmit"
+              class="rounded-2xl bg-[var(--qb-primary)] px-6 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            >
+              {{ submitting ? 'Submitting...' : 'Submit Review' }}
+            </button>
+
+            <a
+              [routerLink]="['/orders', order?.orderId]"
+              class="rounded-2xl border border-black/10 bg-white px-6 py-3 font-semibold text-[var(--qb-text)] transition hover:bg-black/5"
+            >
+              Back to Tracking
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+}

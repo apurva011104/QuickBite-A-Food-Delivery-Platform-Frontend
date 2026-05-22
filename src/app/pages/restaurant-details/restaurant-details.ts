@@ -1,12 +1,14 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { catchError, forkJoin, of } from 'rxjs';
 import { Restaurant } from '../../core/models/restaurant.model';
 import { MenuCategory, MenuItem } from '../../core/models/menu-item.model';
 import { RestaurantService } from '../../core/services/restaurant.service';
 import { MenuService } from '../../core/services/menu.service';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
+import { MenuItemReviewSummaryResponse, ReviewService } from '../../core/services/review.service';
 
 @Component({
   selector: 'app-restaurant-details',
@@ -35,6 +37,7 @@ export class RestaurantDetails implements OnInit {
     private readonly restaurantService: RestaurantService,
     private readonly menuService: MenuService,
     private readonly cartService: CartService,
+    private readonly reviewService: ReviewService,
     public readonly authService: AuthService,
     private readonly cdr: ChangeDetectorRef
   ) {}
@@ -62,8 +65,11 @@ export class RestaurantDetails implements OnInit {
 
     this.menuService.getFullMenuByRestaurant(restaurantId).subscribe({
       next: (categories: MenuCategory[]) => {
-        this.fullMenu = [...categories];
-        this.menuItems = categories.flatMap((category) => category.items || []);
+        this.fullMenu = categories.map((category) => ({
+          ...category,
+          items: (category.items || []).map((item) => ({ ...item }))
+        }));
+        this.menuItems = this.fullMenu.flatMap((category) => category.items || []);
 
         const firstImage = this.menuItems.find((item) => item.imageUrl)?.imageUrl;
         this.restaurantImage =
@@ -71,6 +77,7 @@ export class RestaurantDetails implements OnInit {
 
         this.loading = false;
         this.cdr.detectChanges();
+        this.loadMenuItemReviewSummaries();
       },
       error: (err: any) => {
         this.errorMessage = err?.error?.message || 'Unable to load menu.';
@@ -133,5 +140,65 @@ export class RestaurantDetails implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  getMenuItemReviewCountLabel(item: MenuItem): string {
+    const reviewCount = item.reviewCount ?? 0;
+    return reviewCount === 1 ? '1 review' : `${reviewCount} reviews`;
+  }
+
+  hasMenuItemReviews(item: MenuItem): boolean {
+    return (item.reviewCount ?? 0) > 0;
+  }
+
+  private loadMenuItemReviewSummaries(): void {
+    if (!this.menuItems.length) {
+      return;
+    }
+
+    const uniqueItems = Array.from(
+      new Map(this.menuItems.map((item) => [item.itemId, item])).values()
+    );
+
+    const summaryRequests = uniqueItems.map((item) =>
+      this.reviewService.getMenuItemReviewSummary(item.itemId).pipe(
+        catchError(() =>
+          of({
+            menuItemId: item.itemId,
+            averageRating: item.rating ?? 0,
+            reviewCount: item.reviewCount ?? 0
+          } satisfies MenuItemReviewSummaryResponse)
+        )
+      )
+    );
+
+    forkJoin(summaryRequests).subscribe({
+      next: (summaries) => {
+        const summaryMap = new Map(summaries.map((summary) => [summary.menuItemId, summary]));
+
+        this.menuItems = this.menuItems.map((item) => this.mergeMenuItemReviewSummary(item, summaryMap));
+        this.fullMenu = this.fullMenu.map((category) => ({
+          ...category,
+          items: category.items.map((item) => this.mergeMenuItemReviewSummary(item, summaryMap))
+        }));
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private mergeMenuItemReviewSummary(
+    item: MenuItem,
+    summaryMap: Map<number, MenuItemReviewSummaryResponse>
+  ): MenuItem {
+    const summary = summaryMap.get(item.itemId);
+    if (!summary) {
+      return item;
+    }
+
+    return {
+      ...item,
+      rating: Number(summary.averageRating.toFixed(1)),
+      reviewCount: summary.reviewCount
+    };
   }
 }

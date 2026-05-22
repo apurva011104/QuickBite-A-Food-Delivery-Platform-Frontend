@@ -46,11 +46,19 @@ export interface AvailabilityUpdateRequest {
 export interface CompleteDeliveryRequest {
   agentId: number;
   orderId: number;
+  otp: string;
 }
 
 export interface PickupDeliveryRequest {
   agentId: number;
   orderId: number;
+}
+
+export interface DeliveryCompletionOtpResponse {
+  orderId: number;
+  otp: string;
+  status: DeliveryStatus;
+  generatedAt: string;
 }
 
 @Injectable({
@@ -108,6 +116,10 @@ export class DeliveryService {
 
   getActiveDeliveries(agentId: number): Observable<ActiveDeliveryResponse[]> {
     return this.http.get<ActiveDeliveryResponse[]>(`${this.baseUrl}/${agentId}/active-deliveries`);
+  }
+
+  getCompletionOtp(orderId: number): Observable<DeliveryCompletionOtpResponse> {
+    return this.http.get<DeliveryCompletionOtpResponse>(`${this.baseUrl}/orders/${orderId}/completion-otp`);
   }
 
   assignOrder(agentId: number, orderId: number): Observable<{ message: string }> {

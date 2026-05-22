@@ -9,7 +9,7 @@ import {
   DeliveryAgentResponse,
   DeliveryService
 } from '../../core/services/delivery.service';
-import { OrderResponse, OrderService, OrderStatus } from '../../core/services/order.service';
+import { OrderResponse, OrderService } from '../../core/services/order.service';
 import { RestaurantService } from '../../core/services/restaurant.service';
 import { Restaurant } from '../../core/models/restaurant.model';
 
@@ -27,6 +27,7 @@ interface DeliveryCard extends ActiveDeliveryResponse {
 export class DeliveryDashboard implements OnInit {
   agent: DeliveryAgentResponse | null = null;
   activeDeliveries: DeliveryCard[] = [];
+  deliveryCompletionCodes: Record<number, string> = {};
 
   registerForm: DeliveryAgentRequest = {
     fullName: '',
@@ -285,14 +286,13 @@ export class DeliveryDashboard implements OnInit {
   pickupDelivery(orderId: number): void {
     if (!this.agent) return;
 
-    this.runDeliveryTransition(
+    this.runDeliveryAction(
       orderId,
       this.deliveryService.pickupDelivery({
         agentId: this.agent.agentId,
         orderId
       }),
-      'OUT_FOR_DELIVERY',
-      'Order picked up and marked out for delivery.'
+      'Order picked up and customer tracking is now updated.'
     );
   }
 
@@ -324,16 +324,27 @@ export class DeliveryDashboard implements OnInit {
 
   completeDelivery(orderId: number): void {
     if (!this.agent) return;
+    const otp = (this.deliveryCompletionCodes[orderId] || '').trim();
 
-    this.runDeliveryTransition(
+    if (!/^\d{6}$/.test(otp)) {
+      this.errorMessage = 'Enter the 6-digit OTP shared by the customer before marking delivery complete.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.runDeliveryAction(
       orderId,
       this.deliveryService.completeDelivery({
         agentId: this.agent.agentId,
-        orderId
+        orderId,
+        otp
       }),
-      'DELIVERED',
       'Delivery completed successfully.'
     );
+  }
+
+  onCompletionOtpChange(orderId: number, value: string): void {
+    this.deliveryCompletionCodes[orderId] = value.replace(/\D/g, '').slice(0, 6);
   }
 
   getTripDistanceKm(delivery: DeliveryCard): number | null {
@@ -356,51 +367,6 @@ export class DeliveryDashboard implements OnInit {
     );
   }
 
-  private runDeliveryTransition(
-    orderId: number,
-    deliveryRequest: ReturnType<DeliveryService['pickupDelivery']>,
-    orderStatus: OrderStatus,
-    successFallback: string
-  ): void {
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.processingDeliveryId = orderId;
-
-    deliveryRequest
-      .pipe(
-        switchMap((deliveryResponse) =>
-          this.orderService.updateOrderStatus(orderId, orderStatus).pipe(
-            map(() => ({
-              message: deliveryResponse.message || successFallback,
-              orderStatusSynced: true,
-              orderError: ''
-            })),
-            catchError((err) =>
-              of({
-                message: deliveryResponse.message || successFallback,
-                orderStatusSynced: false,
-                orderError: err?.error?.message || 'Order status sync is still pending.'
-              })
-            )
-          )
-        )
-      )
-      .subscribe({
-        next: (result) => {
-          this.processingDeliveryId = null;
-          this.successMessage = result.orderStatusSynced
-            ? result.message
-            : `${result.message} ${result.orderError}`;
-          this.loadAgentDashboard();
-        },
-        error: (err: any) => {
-          this.processingDeliveryId = null;
-          this.errorMessage = err?.error?.message || 'Unable to update delivery status.';
-          this.cdr.detectChanges();
-        }
-      });
-  }
-
   private runDeliveryAction(
     orderId: number,
     deliveryRequest: ReturnType<DeliveryService['acceptDelivery']>,
@@ -413,6 +379,7 @@ export class DeliveryDashboard implements OnInit {
     deliveryRequest.subscribe({
       next: (response) => {
         this.processingDeliveryId = null;
+        delete this.deliveryCompletionCodes[orderId];
         this.successMessage = response.message || successFallback;
         this.loadAgentDashboard();
       },

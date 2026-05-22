@@ -262,14 +262,37 @@
                       {{ processingDeliveryId === delivery.orderId ? 'Updating...' : 'Mark Picked Up' }}
                     </button>
                   } @else if (delivery.status === 'PICKED_UP') {
-                    <button
-                      type="button"
-                      (click)="completeDelivery(delivery.orderId)"
-                      [disabled]="processingDeliveryId === delivery.orderId"
-                      class="rounded-2xl bg-green-600 px-4 py-2 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-                    >
-                      {{ processingDeliveryId === delivery.orderId ? 'Updating...' : 'Mark Delivered' }}
-                    </button>
+                    <div class="w-full max-w-sm">
+                      <label
+                        class="mb-2 block text-sm font-semibold text-[var(--qb-text)]"
+                        [attr.for]="'completionOtp-' + delivery.orderId"
+                      >
+                        Customer Delivery OTP
+                      </label>
+                      <input
+                        [id]="'completionOtp-' + delivery.orderId"
+                        [name]="'completionOtp-' + delivery.orderId"
+                        [ngModel]="deliveryCompletionCodes[delivery.orderId] || ''"
+                        (ngModelChange)="onCompletionOtpChange(delivery.orderId, $event)"
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="6"
+                        placeholder="Enter 6-digit OTP"
+                        class="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[var(--qb-primary)]"
+                      />
+                      <p class="mt-2 text-xs text-[var(--qb-muted)]">
+                        Ask the customer for this OTP at delivery time before marking the order as delivered.
+                      </p>
+
+                      <button
+                        type="button"
+                        (click)="completeDelivery(delivery.orderId)"
+                        [disabled]="processingDeliveryId === delivery.orderId || (deliveryCompletionCodes[delivery.orderId] || '').length !== 6"
+                        class="mt-4 rounded-2xl bg-green-600 px-4 py-2 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+                      >
+                        {{ processingDeliveryId === delivery.orderId ? 'Updating...' : 'Mark Delivered' }}
+                      </button>
+                    </div>
                   }
                 </div>
 

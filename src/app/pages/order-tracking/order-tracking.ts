@@ -1,18 +1,25 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { DeliveryService } from '../../core/services/delivery.service';
 import { OrderResponse, OrderService } from '../../core/services/order.service';
 
 @Component({
   selector: 'app-order-tracking',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, DatePipe],
   templateUrl: './order-tracking.html'
 })
 export class OrderTracking implements OnInit, OnDestroy {
   order: OrderResponse | undefined;
   errorMessage = '';
+  deliveryCompletionOtp: string | null = null;
+  deliveryOtpGeneratedAt: string | null = null;
+  deliveryOtpErrorMessage = '';
+  loadingDeliveryOtp = false;
   private orderUpdatesSubscription?: Subscription;
+  private completionOtpSubscription?: Subscription;
   private readonly pollMs = 10000;
 
   readonly statuses = ['PLACED', 'PAYMENT_PENDING', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED'];
@@ -20,6 +27,7 @@ export class OrderTracking implements OnInit, OnDestroy {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly orderService: OrderService,
+    private readonly deliveryService: DeliveryService,
     private readonly cdr: ChangeDetectorRef
   ) {}
 
@@ -35,6 +43,12 @@ export class OrderTracking implements OnInit, OnDestroy {
       next: (order) => {
         this.order = order;
         this.errorMessage = '';
+
+        if (order.orderStatus === 'OUT_FOR_DELIVERY') {
+          this.loadDeliveryCompletionOtp(order.orderId);
+        } else {
+          this.clearDeliveryCompletionOtp();
+        }
 
         if (this.isFinished(order.orderStatus)) {
           this.stopLiveUpdates();
@@ -81,8 +95,39 @@ export class OrderTracking implements OnInit, OnDestroy {
     return status === 'DELIVERED' || status === 'REJECTED' || status === 'CANCELLED';
   }
 
+  private loadDeliveryCompletionOtp(orderId: number): void {
+    this.loadingDeliveryOtp = true;
+    this.completionOtpSubscription?.unsubscribe();
+    this.completionOtpSubscription = this.deliveryService.getCompletionOtp(orderId).subscribe({
+      next: (response) => {
+        this.deliveryCompletionOtp = response.otp;
+        this.deliveryOtpGeneratedAt = response.generatedAt;
+        this.deliveryOtpErrorMessage = '';
+        this.loadingDeliveryOtp = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.deliveryCompletionOtp = null;
+        this.deliveryOtpGeneratedAt = null;
+        this.deliveryOtpErrorMessage = 'Your delivery OTP will appear here as soon as the rider is ready to complete the handoff.';
+        this.loadingDeliveryOtp = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private clearDeliveryCompletionOtp(): void {
+    this.completionOtpSubscription?.unsubscribe();
+    this.completionOtpSubscription = undefined;
+    this.deliveryCompletionOtp = null;
+    this.deliveryOtpGeneratedAt = null;
+    this.deliveryOtpErrorMessage = '';
+    this.loadingDeliveryOtp = false;
+  }
+
   private stopLiveUpdates(): void {
     this.orderUpdatesSubscription?.unsubscribe();
     this.orderUpdatesSubscription = undefined;
+    this.clearDeliveryCompletionOtp();
   }
 }

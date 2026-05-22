@@ -11,6 +11,7 @@ export interface MenuItem {
   calories: number;
   available: boolean;
   rating: number;
+  reviewCount?: number;
   tags: string[];
 }
 
